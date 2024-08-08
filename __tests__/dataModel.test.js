@@ -1,0 +1,109 @@
+const {
+  retrieveBalance,
+  retrieveOpenOrders,
+  retrievePnl,
+} = require("../models/data.model");
+const { krakenRequest } = require("../utils/helperFunctions");
+
+jest.mock("../utils/helperFunctions");
+
+describe("retrieveBalance", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("should call krakenRequest with the correct path", async () => {
+    const expectedPath = "/0/private/Balance";
+
+    await retrieveBalance();
+    expect(krakenRequest).toHaveBeenCalled();
+    expect(krakenRequest).toHaveBeenCalledWith(expectedPath);
+  });
+  it("should handle errors thrown by krakenRequest", async () => {
+    const errorMessage = "Something went wrong";
+
+    krakenRequest.mockImplementationOnce(() =>
+      Promise.reject(new Error(errorMessage))
+    );
+
+    await expect(retrieveBalance()).rejects.toThrow(errorMessage);
+  });
+  it("should return the output of krakenRequest", async () => {
+    const mockBalance = { BTC: 1 };
+
+    krakenRequest.mockImplementationOnce(() => mockBalance);
+
+    const balance = await retrieveBalance();
+
+    expect(balance).toEqual(mockBalance);
+  });
+});
+
+describe("retrieveOpenOrders", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("should call krakenRequest with the correct path", async () => {
+    const expectedPath = "/0/private/OpenOrders";
+
+    await retrieveOpenOrders();
+
+    expect(krakenRequest).toHaveBeenCalled();
+    expect(krakenRequest).toHaveBeenCalledWith(expectedPath);
+  });
+  it("should handle errors thrown by krakenRequest", async () => {
+    const errorMessage = "Something went wrong";
+
+    krakenRequest.mockImplementationOnce(() => {
+      return Promise.reject(new Error(errorMessage));
+    });
+
+    await expect(retrieveOpenOrders()).rejects.toThrow(errorMessage);
+  });
+  it("should return the output of krakenRequest", async () => {
+    const mockOpenOrdersData = { orderOne: "123" };
+
+    krakenRequest.mockImplementationOnce(() => {
+      return mockOpenOrdersData;
+    });
+
+    const openOrdersData = retrieveOpenOrders();
+
+    expect(openOrdersData).toEqual(mockOpenOrdersData);
+  });
+});
+
+describe("retrievePnl", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("should call krakenRequest with the correct path", async () => {
+    const expectedPath = "/0/private/TradeBalance";
+
+    const mockTradeBalanceData = { v: 100.0 };
+
+    krakenRequest.mockResolvedValueOnce(mockTradeBalanceData)
+
+    await retrievePnl();
+
+    expect(krakenRequest).toHaveBeenCalled();
+    expect(krakenRequest).toHaveBeenCalledWith(expectedPath);
+  });
+  it("should handle errors thrown by krakenRequest", async () => {
+    const errorMessage = "Something went wrong";
+
+    krakenRequest.mockImplementationOnce(() => {
+      return Promise.reject(new Error(errorMessage));
+    });
+
+    await expect(retrievePnl()).rejects.toThrow(errorMessage);
+  });
+  it('should return a floating point valuation of the current open positions', async () => {
+    const mockTradeBalanceData = { v: 100.0 };
+
+    krakenRequest.mockResolvedValueOnce(mockTradeBalanceData)
+
+    const actual = await retrievePnl();
+    expect(typeof actual).toBe("number")
+    expect(actual).toEqual(mockTradeBalanceData.v)
+  });
+});

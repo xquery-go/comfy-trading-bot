@@ -1,0 +1,23 @@
+{
+  "name": "automated-btc-trader",
+  "version": "1.0.0",
+  "description": "A Kraken BTC trading bot",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon listen.js",
+    "test": "jest"
+  },
+  "author": "Josh Burnlees",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.3",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.4",
+    "supertest": "^7.0.0"
+  }
+}
