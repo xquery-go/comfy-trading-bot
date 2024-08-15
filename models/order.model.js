@@ -1,6 +1,6 @@
 const { krakenRequest } = require("../utils/helperFunctions");
 
-exports.createOrder = (type, volume, pair, price, stopLoss, validate) => {
+exports.createOrder = (type, volume, pair, price, stopLoss, validate = false) => {
   if (type !== "buy" && type !== "sell") {
     return Promise.reject(new Error("Invalid order type"));
   }
@@ -24,7 +24,7 @@ exports.createOrder = (type, volume, pair, price, stopLoss, validate) => {
     "close[ordertype]": "stop-loss",
     "close[price]": stopLoss,
     leverage: "3:1",
-    validate: false,
+    validate,
   };
 
   console.log(request);

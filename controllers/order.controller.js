@@ -16,7 +16,8 @@ exports.placeOrder = async (req, res) => {
       quantity,
       ticker,
       price,
-      stopLoss
+      stopLoss,
+      validate
     );
 
     const orderId = orderData.txid[0];
