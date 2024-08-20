@@ -20,8 +20,6 @@ exports.placeOrder = async (req, res) => {
       validate
     );
 
-    const orderId = orderData.txid[0];
-
     const takeProfitOrderData = await createTakeProfitOrder(
       action,
       quantity,
@@ -29,7 +27,10 @@ exports.placeOrder = async (req, res) => {
       validate
     );
 
-    trackPositionStatus(orderId);
+    if (!validate) {
+      const orderId = orderData.txid[0];
+      trackPositionStatus(orderId);
+    }
 
     res.status(201).send({ orderData, takeProfitOrderData });
   } catch (error) {
