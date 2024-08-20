@@ -60,7 +60,8 @@ describe("POST /create-order", () => {
           mockOrderDetails.quantity,
           mockOrderDetails.ticker,
           mockOrderDetails.price,
-          mockOrderDetails.stopLoss
+          mockOrderDetails.stopLoss,
+          mockOrderDetails.validate
         );
       });
   });
