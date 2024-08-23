@@ -2,6 +2,8 @@ const crypto = require("crypto");
 const axios = require("axios");
 const { URLSearchParams } = require("url");
 const { apiKey, apiSecret } = require("./keys");
+const { retrieveBalance } = require("../models/data.model");
+const { log } = require("console");
 
 const kraken = axios.create({
   baseURL: "https://api.kraken.com",
@@ -66,4 +68,25 @@ exports.validateOrderInputs = (type, volume, price) => {
   if (isNaN(price) || price <= 0) {
     throw new Error("Invalid price specified");
   }
+};
+
+const roundToTwoDecimals = (num) => {
+  return Math.round(num * 100) / 100;
+};
+
+exports.riskManageVolume = async (entry, stopLoss, riskPerc, baseCurrency) => {
+  const accountBalance = await retrieveBalance();
+
+  const roundedAccountBalance = roundToTwoDecimals(
+    accountBalance[baseCurrency]
+  );
+  const riskAmount = roundToTwoDecimals(roundedAccountBalance * riskPerc);
+
+  const stopDistance = entry - stopLoss;
+  const stopAverage = (entry + stopLoss) / 2;
+  const stopPercentage = roundToTwoDecimals(stopDistance / stopAverage);
+
+  const volume = Math.abs(riskAmount / stopPercentage / entry);
+
+  return volume;
 };
