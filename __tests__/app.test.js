@@ -13,6 +13,7 @@ const {
   retrieveOpenOrders,
   retrievePnl,
 } = require("../models/data.model");
+const { riskManageVolume } = require("../utils/riskManagement");
 
 jest.mock("../models/order.model", () => ({
   createOrder: jest.fn(),
@@ -28,6 +29,9 @@ jest.mock("../models/data.model", () => ({
   retrieveOpenOrders: jest.fn(),
   retrievePnl: jest.fn(),
 }));
+
+jest.mock("../utils/helperFunctions");
+jest.mock("../utils/riskManagement");
 
 describe("POST /create-order", () => {
   afterEach(() => {
@@ -46,6 +50,8 @@ describe("POST /create-order", () => {
 
     const mockOrderData = { txid: ["order123"] };
 
+    riskManageVolume.mockResolvedValue(0.001);
+
     createOrder.mockResolvedValue(mockOrderData);
 
     return request(app)
@@ -57,7 +63,7 @@ describe("POST /create-order", () => {
         expect(createOrder).toHaveBeenCalled();
         expect(createOrder).toHaveBeenCalledWith(
           mockOrderDetails.action,
-          mockOrderDetails.quantity,
+          0.001,
           mockOrderDetails.ticker,
           mockOrderDetails.price,
           mockOrderDetails.stopLoss,
@@ -78,6 +84,8 @@ describe("POST /create-order", () => {
 
     const mockTakeProftOrderData = { txid: ["order123"] };
 
+    riskManageVolume.mockResolvedValue(0.001);
+
     createTakeProfitOrder.mockResolvedValue(mockTakeProftOrderData);
 
     return request(app)
@@ -89,7 +97,7 @@ describe("POST /create-order", () => {
         expect(createTakeProfitOrder).toHaveBeenCalled();
         expect(createTakeProfitOrder).toHaveBeenCalledWith(
           mockOrderDetails.action,
-          mockOrderDetails.quantity,
+          0.001,
           mockOrderDetails.takeProfit,
           mockOrderDetails.validate
         );

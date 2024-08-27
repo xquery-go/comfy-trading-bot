@@ -2,8 +2,6 @@ const crypto = require("crypto");
 const axios = require("axios");
 const { URLSearchParams } = require("url");
 const { apiKey, apiSecret } = require("./keys");
-const { retrieveBalance } = require("../models/data.model");
-const { log } = require("console");
 
 const kraken = axios.create({
   baseURL: "https://api.kraken.com",
@@ -58,35 +56,22 @@ exports.krakenRequest = async (path, request) => {
   }
 };
 
-exports.validateOrderInputs = (type, volume, price) => {
-  if (type !== "buy" && type !== "sell") {
+exports.validateOrderInputs = (type, volume, price, stopLoss) => {
+  
+  if (type && type !== "buy" && type !== "sell") {
     throw new Error("Invalid order type");
   }
-  if (isNaN(volume) || volume <= 0) {
+  if (volume && isNaN(volume) || volume <= 0) {
     throw new Error("Invalid volume specified");
   }
-  if (isNaN(price) || price <= 0) {
+  if (price && isNaN(price) || price <= 0) {
     throw new Error("Invalid price specified");
+  }
+  if (stopLoss && isNaN(stopLoss) || stopLoss <= 0) {
+    throw new Error("Invalid stop loss specified");
   }
 };
 
-const roundToTwoDecimals = (num) => {
+exports.roundToTwoDecimals = (num) => {
   return Math.round(num * 100) / 100;
-};
-
-exports.riskManageVolume = async (entry, stopLoss, riskPerc, baseCurrency) => {
-  const accountBalance = await retrieveBalance();
-
-  const roundedAccountBalance = roundToTwoDecimals(
-    accountBalance[baseCurrency]
-  );
-  const riskAmount = roundToTwoDecimals(roundedAccountBalance * riskPerc);
-
-  const stopDistance = entry - stopLoss;
-  const stopAverage = (entry + stopLoss) / 2;
-  const stopPercentage = roundToTwoDecimals(stopDistance / stopAverage);
-
-  const volume = Math.abs(riskAmount / stopPercentage / entry);
-
-  return volume;
 };

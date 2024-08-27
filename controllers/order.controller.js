@@ -6,14 +6,18 @@ const {
   removeOrderById,
   updateOrderById,
 } = require("../models/order.model");
+const { riskManageVolume } = require("../utils/riskManagement");
 
 exports.placeOrder = async (req, res) => {
   try {
     const { action, quantity, ticker, price, stopLoss, takeProfit, validate } =
       req.body;
+
+    const orderVolume = await riskManageVolume(price, stopLoss, 0.01, "USDT");
+
     const orderData = await createOrder(
       action,
-      quantity,
+      orderVolume,
       ticker,
       price,
       stopLoss,
@@ -22,7 +26,7 @@ exports.placeOrder = async (req, res) => {
 
     const takeProfitOrderData = await createTakeProfitOrder(
       action,
-      quantity,
+      orderVolume,
       takeProfit,
       validate
     );

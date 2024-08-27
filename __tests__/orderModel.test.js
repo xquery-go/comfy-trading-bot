@@ -7,9 +7,20 @@ const {
   removeOrderById,
   updateOrderById,
 } = require("../models/order.model");
-const { krakenRequest } = require("../utils/helperFunctions");
+const {
+  krakenRequest,
+  validateOrderInputs,
+} = require("../utils/helperFunctions");
+const { riskManageVolume } = require("../utils/riskManagement");
 
-jest.mock("../utils/helperFunctions");
+jest.mock("../utils/helperFunctions", () => {
+  const originalModule = jest.requireActual('../utils/helperFunctions')
+  return {
+    ...originalModule,
+    krakenRequest: jest.fn(() => {}),
+  };
+});
+jest.mock("../utils/riskManagement");
 
 describe("createOrder", () => {
   beforeEach(() => {
@@ -27,6 +38,10 @@ describe("createOrder", () => {
       stopLoss: 49000,
       validate: false,
     };
+
+    riskManageVolume.mockImplementationOnce(() => {
+      return 0.001;
+    });
 
     const expectedPath = "/0/private/AddOrder";
     const expectedRequest = {
