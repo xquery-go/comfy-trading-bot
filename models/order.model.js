@@ -1,63 +1,65 @@
-const { krakenRequest } = require("../utils/helperFunctions");
+const {
+  krakenRequest,
+  validateOrderInputs,
+} = require("../utils/helperFunctions");
 
-exports.createOrder = (type, volume, pair, price, stopLoss, validate = false) => {
-  if (type !== "buy" && type !== "sell") {
-    return Promise.reject(new Error("Invalid order type"));
-  }
-  if (isNaN(volume) || volume <= 0) {
-    return Promise.reject(new Error("Invalid volume specified"));
-  }
-  if (isNaN(price) || price <= 0) {
-    return Promise.reject(new Error("Invalid price specified"));
-  }
-  if (isNaN(stopLoss) || stopLoss <= 0) {
-    return Promise.reject(new Error("Invalid stop loss specified"));
-  }
+exports.createOrder = async (
+  type,
+  volume,
+  pair,
+  price,
+  stopLoss,
+  validate = false
+) => {
+  try {
+    validateOrderInputs(type, volume, price, stopLoss);
 
-  const path = "/0/private/AddOrder";
-  const request = {
-    ordertype: "limit",
-    type,
-    volume,
-    pair,
-    price,
-    "close[ordertype]": "stop-loss",
-    "close[price]": stopLoss,
-    leverage: "3:1",
-    validate,
-  };
+    const path = "/0/private/AddOrder";
+    const request = {
+      ordertype: "limit",
+      type,
+      volume,
+      pair,
+      price,
+      "close[ordertype]": "stop-loss",
+      "close[price]": stopLoss,
+      leverage: "3:1",
+      validate,
+    };
 
-  console.log(request);
-
-  return krakenRequest(path, request);
+    return krakenRequest(path, request);
+  } catch (error) {
+    throw error;
+  }
 };
 
-exports.createTakeProfitOrder = (type, volume, price, validate = false) => {
-  if (type !== "buy" && type !== "sell") {
-    return Promise.reject(new Error("Invalid order type"));
-  }
-  if (isNaN(volume) || volume < 0) {
-    return Promise.reject(new Error("Invalid volume specified"));
-  }
-  if (isNaN(price) || price < 0) {
-    return Promise.reject(new Error("Invalid price specified"));
-  }
+exports.createTakeProfitOrder = async (
+  type,
+  volume,
+  price,
+  validate = false
+) => {
+  try {
+    validateOrderInputs(type, volume, price);
 
-  const path = "/0/private/AddOrder";
+    const path = "/0/private/AddOrder";
 
-  const request = {
-    ordertype: "take-profit-limit",
-    type: type === "buy" ? "sell" : "buy",
-    volume,
-    pair: "XBTUSDT",
-    price,
-    price2: "#5.0",
-    leverage: "3:1",
-    reduce_only: true,
-    validate,
-  };
+    const request = {
+      ordertype: "take-profit-limit",
+      type: type === "buy" ? "sell" : "buy",
+      volume,
+      pair: "XBTUSDT",
+      price,
+      price2: "#5.0",
+      leverage: "3:1",
+      reduce_only: true,
+      validate,
+    };
 
-  return krakenRequest(path, request);
+    return krakenRequest(path, request);
+  } catch (error) {
+    throw error;
+  }
 };
 
 exports.checkOpenPositions = async () => {
@@ -65,7 +67,7 @@ exports.checkOpenPositions = async () => {
   return krakenRequest(path);
 };
 
-exports.trackPositionStatus = async (initialOrderId, takeProfitOrderId) => {
+exports.trackPositionStatus = async (initialOrderId) => {
   let positionFound = false;
   const interval = setInterval(async () => {
     try {
@@ -108,17 +110,19 @@ exports.removeAllOrders = async () => {
 };
 
 exports.updateOrderById = async (orderId, price) => {
-  if (isNaN(price) || price < 0) {
-    return Promise.reject(new Error("Invalid price specified"));
+  try {
+    validateOrderInputs(undefined, undefined, price);
+
+    const path = "/0/private/EditOrder";
+
+    const request = {
+      txid: orderId,
+      pair: "XBTUSDT",
+      price,
+    };
+
+    return krakenRequest(path, request);
+  } catch (error) {
+    throw error;
   }
-
-  const path = "/0/private/EditOrder";
-
-  const request = {
-    txid: orderId,
-    pair: "XBTUSDT",
-    price,
-  };
-
-  return krakenRequest(path, request);
 };
