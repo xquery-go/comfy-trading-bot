@@ -10,6 +10,7 @@
   "author": "Josh Burnlees",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.637.0",
     "axios": "^1.7.3",
     "crypto": "^1.0.1",
     "dotenv": "^16.4.5",
