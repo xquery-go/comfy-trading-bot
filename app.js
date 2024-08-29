@@ -10,6 +10,7 @@ const {
   getOpenOrders,
   getPnl,
 } = require("./controllers/data.controller");
+const { userSignUp, confirmUser } = require("./controllers/auth.controller");
 
 const app = express();
 
@@ -19,6 +20,8 @@ app.get("/get-balance", getBalance);
 app.get("/get-open-orders", getOpenOrders);
 app.get("/get-pnl", getPnl);
 
+app.post("/register", userSignUp);
+app.post("/confirm-sign-up", confirmUser);
 app.post("/create-order", placeOrder);
 
 app.patch("/edit-order", editOrder);

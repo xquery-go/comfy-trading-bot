@@ -14,6 +14,7 @@ const {
   retrievePnl,
 } = require("../models/data.model");
 const { riskManageVolume } = require("../utils/riskManagement");
+const { createUser, validateUser } = require("../models/auth.model");
 
 jest.mock("../models/order.model", () => ({
   createOrder: jest.fn(),
@@ -32,6 +33,7 @@ jest.mock("../models/data.model", () => ({
 
 jest.mock("../utils/helperFunctions");
 jest.mock("../utils/riskManagement");
+jest.mock("../models/auth.model");
 
 describe("POST /create-order", () => {
   afterEach(() => {
@@ -351,6 +353,127 @@ describe("GET /get-pnl", () => {
       .then(({ body }) => {
         expect(body.error).toBe("Internal Server Error");
         expect(body.details).toBe(errorMessage);
+      });
+  });
+});
+
+describe("POST /register", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("should when successful respond with a 201 status code", async () => {
+    const input = { email: "test1@outlook.com", password: "TesT123!" };
+
+    return request(app).post("/register").send(input).expect(201);
+  });
+  it("should call createUser with the correct arguments", () => {
+    const input = { email: "test1@outlook.com", password: "TesT123!" };
+
+    return request(app)
+      .post("/register")
+      .send(input)
+      .expect(201)
+      .then(() => {
+        expect(createUser).toHaveBeenCalled();
+        expect(createUser).toHaveBeenCalledWith(input.email, input.password);
+      });
+  });
+  it("should when successful, respond with a signUpData object", () => {
+    const input = { email: "test1@outlook.com", password: "TesT123!" };
+
+    const mockSignUpData = {
+      requestId: "test",
+      userSub: "test",
+      codeDestination: "test",
+    };
+
+    createUser.mockImplementationOnce(() => {
+      return mockSignUpData;
+    });
+
+    return request(app)
+      .post("/register")
+      .send(input)
+      .expect(201)
+      .then(({ body }) => {
+        expect(body.signUpData).toEqual(mockSignUpData);
+      });
+  });
+  it("should respond with 400 status code, and appropriate message when password does not conform with policy", async () => {
+    const authModel = require("../models/auth.model");
+    const originalCreateUser = jest.requireActual(
+      "../models/auth.model"
+    ).createUser;
+
+    jest.spyOn(authModel, "createUser").mockImplementation(originalCreateUser);
+
+    const input = { email: "test1@outlook.com", password: "Test" };
+
+    return request(app)
+      .post("/register")
+      .send(input)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.message).toBe(
+          "Password did not conform with policy: Password not long enough"
+        );
+      });
+  });
+  it("should respond with 400 status code, and appropriate message when email is not in the correct format", async () => {
+    const authModel = require("../models/auth.model");
+    const originalCreateUser = jest.requireActual(
+      "../models/auth.model"
+    ).createUser;
+
+    jest.spyOn(authModel, "createUser").mockImplementation(originalCreateUser);
+
+    const input = { email: "test1outlook.com", password: "TesT123!" };
+
+    return request(app)
+      .post("/register")
+      .send(input)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.message).toBe("Invalid email address format.");
+      });
+  });
+});
+
+describe.only("POST /confirm-sign-up", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("should when successful return with a 200 status code", () => {
+    const input = { email: "test@test.com", code: "123456" };
+
+    return request(app).post("/confirm-sign-up").send(input).expect(200);
+  });
+  it("should call validateUser with the correct arguments", async () => {
+    const input = { email: "test@test.com", code: "123456" };
+
+    return request(app)
+      .post("/confirm-sign-up")
+      .send(input)
+      .expect(200)
+      .then(() => {
+        expect(validateUser).toHaveBeenCalled();
+        expect(validateUser).toHaveBeenCalledWith(input.email, input.code);
+      });
+  });
+  it("should handle errors thrown by validateUser", async () => {
+    const input = { email: "test@test.com", code: "123456" };
+    const mockErrorMessage = { status: 400, msg: "mock error" };
+
+    validateUser.mockImplementationOnce(() => {
+      throw mockErrorMessage
+    });
+
+    return request(app)
+      .post("/confirm-sign-up")
+      .send(input)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.message).toBe(mockErrorMessage.msg);
       });
   });
 });
