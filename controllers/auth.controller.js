@@ -1,4 +1,8 @@
-const { authenticateUser, removeUser } = require("../models/auth.model");
+const {
+  authenticateUser,
+  removeUser,
+  changeUserPassword,
+} = require("../models/auth.model");
 const { createUser, validateUser } = require("../models/auth.model");
 
 exports.userSignUp = async (req, res) => {
@@ -37,6 +41,21 @@ exports.deleteUserByToken = async (req, res) => {
   try {
     await removeUser(token);
     res.status(202).send();
+  } catch (error) {
+    res.status(error.status).send({ message: error.msg });
+  }
+};
+
+exports.changeUserPasswordByToken = async (req, res) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  const { previousPassword, proposedPassword } = req.body;
+  try {
+    const confirmationData = await changeUserPassword(
+      token,
+      previousPassword,
+      proposedPassword
+    );
+    res.status(200).send({ confirmationData });
   } catch (error) {
     res.status(error.status).send({ message: error.msg });
   }

@@ -10,7 +10,13 @@ const {
   getOpenOrders,
   getPnl,
 } = require("./controllers/data.controller");
-const { userSignUp, confirmUser, userSignIn, deleteUserByToken } = require("./controllers/auth.controller");
+const {
+  userSignUp,
+  confirmUser,
+  userSignIn,
+  deleteUserByToken,
+  changeUserPasswordByToken,
+} = require("./controllers/auth.controller");
 const { verifyAccessToken } = require("./utils/cognito");
 
 const app = express();
@@ -29,7 +35,8 @@ app.patch("/cancel-all-orders", verifyAccessToken, cancelAllOrders);
 // Auth
 app.post("/register", userSignUp);
 app.post("/confirm-sign-up", confirmUser);
-app.post("/sign-in", userSignIn)
-app.delete("/delete-user", verifyAccessToken, deleteUserByToken)
+app.post("/sign-in", userSignIn);
+app.patch("/change-password", verifyAccessToken, changeUserPasswordByToken);
+app.delete("/delete-user", verifyAccessToken, deleteUserByToken);
 
 module.exports = app;
