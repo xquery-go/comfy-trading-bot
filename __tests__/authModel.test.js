@@ -2,8 +2,14 @@ const {
   createUser,
   validateUser,
   authenticateUser,
+  removeUser,
 } = require("../models/auth.model");
-const { signUp, confirmSignUp, signIn } = require("../utils/cognito");
+const {
+  signUp,
+  confirmSignUp,
+  signIn,
+  deleteUser,
+} = require("../utils/cognito");
 jest.mock("../utils/cognito");
 
 const mockResponse = {
@@ -135,6 +141,37 @@ describe("authenticateUser", () => {
     });
 
     await expect(authenticateUser(...input)).rejects.toEqual({
+      status: 400,
+      msg: "Something went wrong",
+    });
+  });
+});
+
+describe("removeUser", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("should call deleteUser with the correct arugment", async () => {
+    const input = "token";
+
+    await removeUser(input);
+    expect(deleteUser).toHaveBeenCalled();
+    expect(deleteUser).toHaveBeenCalledWith(input);
+  });
+  it("should handle errors thrown by deleteUser", async () => {
+    const input = "token";
+    const mockErrorMessage = {
+      $metadata: {
+        httpStatusCode: 400,
+      },
+      message: "Something went wrong",
+    };
+
+    deleteUser.mockImplementationOnce(() => {
+      return Promise.reject(mockErrorMessage);
+    });
+
+    await expect(removeUser(input)).rejects.toEqual({
       status: 400,
       msg: "Something went wrong",
     });
