@@ -10,22 +10,25 @@ const {
   getOpenOrders,
   getPnl,
 } = require("./controllers/data.controller");
-const { userSignUp, confirmUser } = require("./controllers/auth.controller");
+const { userSignUp, confirmUser, userSignIn } = require("./controllers/auth.controller");
+const { verifyAccessToken } = require("./utils/cognito");
 
 const app = express();
 
 app.use(express.json());
 
-app.get("/get-balance", getBalance);
-app.get("/get-open-orders", getOpenOrders);
-app.get("/get-pnl", getPnl);
+// Kraken
+app.get("/get-balance", verifyAccessToken, getBalance);
+app.get("/get-open-orders", verifyAccessToken, getOpenOrders);
+app.get("/get-pnl", verifyAccessToken, getPnl);
+app.post("/create-order", placeOrder);
+app.patch("/edit-order", verifyAccessToken, editOrder);
+app.patch("/cancel-order", verifyAccessToken, cancelOrderById);
+app.patch("/cancel-all-orders", verifyAccessToken, cancelAllOrders);
 
+// Auth
 app.post("/register", userSignUp);
 app.post("/confirm-sign-up", confirmUser);
-app.post("/create-order", placeOrder);
-
-app.patch("/edit-order", editOrder);
-app.patch("/cancel-order", cancelOrderById);
-app.patch("/cancel-all-orders", cancelAllOrders);
+app.post("/sign-in", userSignIn)
 
 module.exports = app;

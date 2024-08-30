@@ -1,5 +1,9 @@
-const { createUser, validateUser } = require("../models/auth.model");
-const { signUp, confirmSignUp } = require("../utils/cognito");
+const {
+  createUser,
+  validateUser,
+  authenticateUser,
+} = require("../models/auth.model");
+const { signUp, confirmSignUp, signIn } = require("../utils/cognito");
 jest.mock("../utils/cognito");
 
 const mockResponse = {
@@ -74,12 +78,65 @@ describe("validateUser", () => {
   });
   it("should handle errors thrown by confirmSignUp", async () => {
     const input = ["test@test.com", "123456"];
-    const mockErrorMessage = "Something went wrong";
+    // const mockErrorMessage = "Something went wrong";
+    const mockErrorMessage = {
+      $metadata: {
+        httpStatusCode: 400,
+      },
+      message: "Something went wrong",
+    };
 
     confirmSignUp.mockImplementationOnce(() => {
-      return Promise.reject(new Error(mockErrorMessage));
+      return Promise.reject(mockErrorMessage);
     });
 
-    await expect(validateUser(...input)).rejects.toThrow(mockErrorMessage);
+    await expect(validateUser(...input)).rejects.toEqual({
+      status: 400,
+      msg: "Something went wrong",
+    });
+  });
+});
+
+describe("authenticateUser", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("should call signIn with the correct arguments", async () => {
+    const input = ["test@test.com", "password"];
+
+    await authenticateUser(...input);
+
+    expect(signIn).toHaveBeenCalled();
+    expect(signIn).toHaveBeenCalledWith(...input);
+  });
+  it("should when successful return the ouput of signIn", async () => {
+    const input = ["test@test.com", "password"];
+    const mockResponse = "Sign in successful";
+
+    signIn.mockImplementationOnce(() => {
+      return mockResponse;
+    });
+
+    const actual = await authenticateUser(...input);
+
+    expect(actual).toBe(mockResponse);
+  });
+  it("should handle errors thrown by signIn", async () => {
+    const input = ["test@test.com", "password"];
+    const mockErrorMessage = {
+      $metadata: {
+        httpStatusCode: 400,
+      },
+      message: "Something went wrong",
+    };
+
+    signIn.mockImplementationOnce(() => {
+      return Promise.reject(mockErrorMessage);
+    });
+
+    await expect(authenticateUser(...input)).rejects.toEqual({
+      status: 400,
+      msg: "Something went wrong",
+    });
   });
 });

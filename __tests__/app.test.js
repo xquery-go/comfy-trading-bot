@@ -14,7 +14,11 @@ const {
   retrievePnl,
 } = require("../models/data.model");
 const { riskManageVolume } = require("../utils/riskManagement");
-const { createUser, validateUser } = require("../models/auth.model");
+const {
+  createUser,
+  validateUser,
+  authenticateUser,
+} = require("../models/auth.model");
 
 jest.mock("../models/order.model", () => ({
   createOrder: jest.fn(),
@@ -439,7 +443,7 @@ describe("POST /register", () => {
   });
 });
 
-describe.only("POST /confirm-sign-up", () => {
+describe("POST /confirm-sign-up", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -465,11 +469,66 @@ describe.only("POST /confirm-sign-up", () => {
     const mockErrorMessage = { status: 400, msg: "mock error" };
 
     validateUser.mockImplementationOnce(() => {
-      throw mockErrorMessage
+      throw mockErrorMessage;
     });
 
     return request(app)
       .post("/confirm-sign-up")
+      .send(input)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.message).toBe(mockErrorMessage.msg);
+      });
+  });
+});
+
+describe("POST /sign-in", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("should when successful respond with a 200 status code", () => {
+    return request(app).post("/sign-in").expect(200);
+  });
+  it("should call authenticateUser with the correct arguments", () => {
+    const input = { email: "test@test.com", password: "password" };
+
+    return request(app)
+      .post("/sign-in")
+      .send(input)
+      .then(() => {
+        expect(authenticateUser).toHaveBeenCalled();
+        expect(authenticateUser).toHaveBeenCalledWith(
+          input.email,
+          input.password
+        );
+      });
+  });
+  it("should when successful respond with an authenticationResult", () => {
+    const input = { email: "test@test.com", password: "password" };
+    const mockResponse = "Sign in successful";
+
+    authenticateUser.mockImplementationOnce(() => {
+      return mockResponse;
+    });
+
+    return request(app)
+      .post("/sign-in")
+      .send(input)
+      .then(({ body }) => {
+        expect(body.authenticationResult).toBe(mockResponse);
+      });
+  });
+  it("should handle errors thrown by authenticateUser", () => {
+    const input = { email: "test@test.com", password: "password" };
+
+    const mockErrorMessage = { status: 400, msg: "mock error" };
+
+    authenticateUser.mockImplementationOnce(() => {
+      throw mockErrorMessage;
+    });
+
+    return request(app)
+      .post("/sign-in")
       .send(input)
       .expect(400)
       .then(({ body }) => {

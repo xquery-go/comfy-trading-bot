@@ -1,4 +1,4 @@
-const { signUp, confirmSignUp } = require("../utils/cognito");
+const { signUp, confirmSignUp, signIn } = require("../utils/cognito");
 
 exports.createUser = async (email, password) => {
   try {
@@ -22,9 +22,24 @@ exports.createUser = async (email, password) => {
 
 exports.validateUser = async (email, code) => {
   try {
-    const confirmationDetails = await confirmSignUp(email, code);
+    await confirmSignUp(email, code);
     return true;
   } catch (error) {
+    const errorMessage = {
+      status: error.$metadata.httpStatusCode,
+      msg: error.message,
+    };
+    throw errorMessage;
+  }
+};
+
+exports.authenticateUser = async (email, password) => {
+  try {
+    const authenticationDetails = await signIn(email, password);
+    return authenticationDetails;
+  } catch (error) {
+    console.log(error);
+    
     const errorMessage = {
       status: error.$metadata.httpStatusCode,
       msg: error.message,
