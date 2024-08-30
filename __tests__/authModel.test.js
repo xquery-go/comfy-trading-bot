@@ -3,12 +3,14 @@ const {
   validateUser,
   authenticateUser,
   removeUser,
+  changeUserPassword,
 } = require("../models/auth.model");
 const {
   signUp,
   confirmSignUp,
   signIn,
   deleteUser,
+  changePassword,
 } = require("../utils/cognito");
 jest.mock("../utils/cognito");
 
@@ -172,6 +174,50 @@ describe("removeUser", () => {
     });
 
     await expect(removeUser(input)).rejects.toEqual({
+      status: 400,
+      msg: "Something went wrong",
+    });
+  });
+});
+
+describe("changeUserPassword", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("should call changePassword with the correct arguments", async () => {
+    const input = ["token", "password", "newPassword"];
+
+    await changeUserPassword(...input);
+
+    expect(changePassword).toHaveBeenCalled();
+    expect(changePassword).toHaveBeenCalledWith(...input);
+  });
+  it("should when successful response with the output of changePassword", async () => {
+    const input = ["token", "password", "newPassword"];
+    const mockResponse = "Password change successful.";
+
+    changePassword.mockImplementationOnce(() => {
+      return Promise.resolve(mockResponse);
+    });
+
+    const actual = await changeUserPassword(...input);
+
+    expect(actual).toBe(mockResponse);
+  });
+  it("should handle errors thrown by changePassword", async () => {
+    const input = ["token", "password", "newPassword"];
+    const mockErrorMessage = {
+      $metadata: {
+        httpStatusCode: 400,
+      },
+      message: "Something went wrong",
+    };
+
+    changePassword.mockImplementationOnce(() => {
+      return Promise.reject(mockErrorMessage);
+    });
+
+    await expect(changeUserPassword(...input)).rejects.toEqual({
       status: 400,
       msg: "Something went wrong",
     });

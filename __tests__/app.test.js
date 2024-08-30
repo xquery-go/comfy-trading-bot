@@ -19,6 +19,7 @@ const {
   validateUser,
   authenticateUser,
   removeUser,
+  changeUserPassword,
 } = require("../models/auth.model");
 
 jest.mock("../models/order.model", () => ({
@@ -557,7 +558,7 @@ describe("DELETE /delete-user", () => {
         expect(removeUser).toHaveBeenCalledWith(accessToken);
       });
   });
-  it("should handle erros thrown by removeUser", () => {
+  it("should handle errors thrown by removeUser", () => {
     const accessToken = "token";
 
     const mockErrorMessage = { status: 400, msg: "mock error" };
@@ -569,6 +570,78 @@ describe("DELETE /delete-user", () => {
     return request(app)
       .delete("/delete-user")
       .set("Authorization", `Bearer ${accessToken}`)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.message).toBe(mockErrorMessage.msg);
+      });
+  });
+});
+
+describe("PATCH /change-password", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("should when successful respond with a 200 status code", async () => {
+    return request(app).patch("/change-password").expect(200);
+  });
+  it("should call changeUserPassword with the correct arguments", async () => {
+    const input = {
+      previousPassword: "password",
+      proposedPassword: "newPassword",
+    };
+    const accessToken = "token";
+
+    return request(app)
+      .patch("/change-password")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send(input)
+      .expect(200)
+      .then(() => {
+        expect(changeUserPassword).toHaveBeenCalled();
+        expect(changeUserPassword).toHaveBeenCalledWith(
+          accessToken,
+          input.previousPassword,
+          input.proposedPassword
+        );
+      });
+  });
+  it("should when successful respond with a confirmationData object", async () => {
+    const input = {
+      previousPassword: "password",
+      proposedPassword: "newPassword",
+    };
+    const accessToken = "token";
+    const mockResponse = "Password change successful.";
+
+    changeUserPassword.mockImplementationOnce(() => {
+      return Promise.resolve(mockResponse);
+    });
+
+    return request(app)
+      .patch("/change-password")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send(input)
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.confirmationData).toBe(mockResponse);
+      });
+  });
+  it("should handle errors thrown by changeUserPassword", async () => {
+    const input = {
+      previousPassword: "password",
+      proposedPassword: "newPassword",
+    };
+    const accessToken = "token";
+    const mockErrorMessage = { status: 400, msg: "mock error" };
+
+    changeUserPassword.mockImplementationOnce(() => {
+      throw mockErrorMessage
+    })
+
+    return request(app)
+      .patch("/change-password")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send(input)
       .expect(400)
       .then(({ body }) => {
         expect(body.message).toBe(mockErrorMessage.msg);

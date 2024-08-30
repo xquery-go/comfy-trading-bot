@@ -3,6 +3,7 @@ const {
   confirmSignUp,
   signIn,
   deleteUser,
+  changePassword,
 } = require("../utils/cognito");
 
 exports.createUser = async (email, password) => {
@@ -54,6 +55,19 @@ exports.authenticateUser = async (email, password) => {
 exports.removeUser = async (token) => {
   try {
     await deleteUser(token);
+  } catch (error) {
+    const errorMessage = {
+      status: error.$metadata.httpStatusCode,
+      msg: error.message,
+    };
+    throw errorMessage;
+  }
+};
+
+exports.changeUserPassword = async (token, prevPass, proPass) => {
+  try {
+    const response = await changePassword(token, prevPass, proPass);
+    return response;
   } catch (error) {
     const errorMessage = {
       status: error.$metadata.httpStatusCode,
