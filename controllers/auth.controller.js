@@ -1,3 +1,4 @@
+const { authenticateUser } = require("../models/auth.model");
 const { createUser, validateUser } = require("../models/auth.model");
 
 exports.userSignUp = async (req, res) => {
@@ -16,6 +17,16 @@ exports.confirmUser = async (req, res) => {
   try {
     await validateUser(email, code);
     res.status(200).send();
+  } catch (error) {
+    res.status(error.status).send({ message: error.msg });
+  }
+};
+
+exports.userSignIn = async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const authenticationResult = await authenticateUser(email, password);
+    res.status(200).send({ authenticationResult });
   } catch (error) {
     res.status(error.status).send({ message: error.msg });
   }
