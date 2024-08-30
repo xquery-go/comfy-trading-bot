@@ -18,6 +18,7 @@ const {
   createUser,
   validateUser,
   authenticateUser,
+  removeUser,
 } = require("../models/auth.model");
 
 jest.mock("../models/order.model", () => ({
@@ -530,6 +531,44 @@ describe("POST /sign-in", () => {
     return request(app)
       .post("/sign-in")
       .send(input)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.message).toBe(mockErrorMessage.msg);
+      });
+  });
+});
+
+describe("DELETE /delete-user", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("should when successful respond with a 202 status code", async () => {
+    return request(app).delete("/delete-user").expect(202);
+  });
+  it("should call removeUser with the correct arguments", async () => {
+    const accessToken = "token";
+
+    return request(app)
+      .delete("/delete-user")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(202)
+      .then(() => {
+        expect(removeUser).toHaveBeenCalled();
+        expect(removeUser).toHaveBeenCalledWith(accessToken);
+      });
+  });
+  it("should handle erros thrown by removeUser", () => {
+    const accessToken = "token";
+
+    const mockErrorMessage = { status: 400, msg: "mock error" };
+
+    removeUser.mockImplementationOnce(() => {
+      throw mockErrorMessage;
+    });
+
+    return request(app)
+      .delete("/delete-user")
+      .set("Authorization", `Bearer ${accessToken}`)
       .expect(400)
       .then(({ body }) => {
         expect(body.message).toBe(mockErrorMessage.msg);

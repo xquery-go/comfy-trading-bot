@@ -3,6 +3,7 @@ const {
   SignUpCommand,
   ConfirmSignUpCommand,
   InitiateAuthCommand,
+  DeleteUserCommand,
 } = require("@aws-sdk/client-cognito-identity-provider");
 const { CognitoJwtVerifier } = require("aws-jwt-verify");
 const {
@@ -121,6 +122,19 @@ exports.confirmSignUp = async (email, code) => {
     return true;
   } catch (error) {
     console.error("Error confirming sign up: ", error);
+    throw error;
+  }
+};
+
+exports.deleteUser = async (accessToken) => {
+  const params = {
+    AccessToken: accessToken,
+  };
+  try {
+    const command = new DeleteUserCommand(params);
+    await cognitoClient.send(command);
+  } catch (error) {
+    console.error("Error deleting user: ", error);
     throw error;
   }
 };

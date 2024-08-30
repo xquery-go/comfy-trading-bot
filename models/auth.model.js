@@ -1,4 +1,9 @@
-const { signUp, confirmSignUp, signIn } = require("../utils/cognito");
+const {
+  signUp,
+  confirmSignUp,
+  signIn,
+  deleteUser,
+} = require("../utils/cognito");
 
 exports.createUser = async (email, password) => {
   try {
@@ -38,8 +43,18 @@ exports.authenticateUser = async (email, password) => {
     const authenticationDetails = await signIn(email, password);
     return authenticationDetails;
   } catch (error) {
-    console.log(error);
-    
+    const errorMessage = {
+      status: error.$metadata.httpStatusCode,
+      msg: error.message,
+    };
+    throw errorMessage;
+  }
+};
+
+exports.removeUser = async (token) => {
+  try {
+    await deleteUser(token);
+  } catch (error) {
     const errorMessage = {
       status: error.$metadata.httpStatusCode,
       msg: error.message,
