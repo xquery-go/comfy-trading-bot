@@ -4,6 +4,7 @@ const {
   authenticateUser,
   removeUser,
   changeUserPassword,
+  triggerConfirmationCodeResend,
 } = require("../models/auth.model");
 const {
   signUp,
@@ -11,6 +12,7 @@ const {
   signIn,
   deleteUser,
   changePassword,
+  resendConfirmationCode,
 } = require("../utils/cognito");
 jest.mock("../utils/cognito");
 
@@ -192,7 +194,7 @@ describe("changeUserPassword", () => {
     expect(changePassword).toHaveBeenCalled();
     expect(changePassword).toHaveBeenCalledWith(...input);
   });
-  it("should when successful response with the output of changePassword", async () => {
+  it("should when successful return the output of changePassword", async () => {
     const input = ["token", "password", "newPassword"];
     const mockResponse = "Password change successful.";
 
@@ -218,6 +220,50 @@ describe("changeUserPassword", () => {
     });
 
     await expect(changeUserPassword(...input)).rejects.toEqual({
+      status: 400,
+      msg: "Something went wrong",
+    });
+  });
+});
+
+describe("triggerConfirmationCodeResend", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("should call resendConfirmationCode with the correct argument", async () => {
+    const input = "test@test.com";
+
+    await triggerConfirmationCodeResend(input);
+
+    expect(resendConfirmationCode).toHaveBeenCalled();
+    expect(resendConfirmationCode).toHaveBeenCalledWith(input);
+  });
+  it("should when successful return the output of resendConfirmationCode", async () => {
+    const input = "test@test.com";
+    const mockResponse = "Success.";
+
+    resendConfirmationCode.mockImplementationOnce(() => {
+      return Promise.resolve(mockResponse);
+    });
+
+    const actual = await triggerConfirmationCodeResend(input);
+
+    expect(actual).toBe(mockResponse);
+  });
+  it("should handle errors thrown by resendConfirmationCode", async () => {
+    const input = "test@test.com";
+    const mockErrorMessage = {
+      $metadata: {
+        httpStatusCode: 400,
+      },
+      message: "Something went wrong",
+    };
+
+    resendConfirmationCode.mockImplementationOnce(() => {
+      return Promise.reject(mockErrorMessage);
+    });
+
+    await expect(triggerConfirmationCodeResend(input)).rejects.toEqual({
       status: 400,
       msg: "Something went wrong",
     });

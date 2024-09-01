@@ -16,6 +16,7 @@ const {
   userSignIn,
   deleteUserByToken,
   changeUserPasswordByToken,
+  resendAccountConfirmation,
 } = require("./controllers/auth.controller");
 const { verifyAccessToken } = require("./utils/cognito");
 
@@ -35,6 +36,7 @@ app.patch("/cancel-all-orders", verifyAccessToken, cancelAllOrders);
 // Auth
 app.post("/register", userSignUp);
 app.post("/confirm-sign-up", confirmUser);
+app.post("/resend-confirmation-code", resendAccountConfirmation);
 app.post("/sign-in", userSignIn);
 app.patch("/change-password", verifyAccessToken, changeUserPasswordByToken);
 app.delete("/delete-user", verifyAccessToken, deleteUserByToken);

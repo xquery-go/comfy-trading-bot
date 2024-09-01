@@ -2,6 +2,7 @@ const {
   authenticateUser,
   removeUser,
   changeUserPassword,
+  triggerConfirmationCodeResend,
 } = require("../models/auth.model");
 const { createUser, validateUser } = require("../models/auth.model");
 
@@ -56,6 +57,16 @@ exports.changeUserPasswordByToken = async (req, res) => {
       proposedPassword
     );
     res.status(200).send({ confirmationData });
+  } catch (error) {
+    res.status(error.status).send({ message: error.msg });
+  }
+};
+
+exports.resendAccountConfirmation = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const codeDeliveryData = await triggerConfirmationCodeResend(email);
+    res.status(200).send({ codeDeliveryData });
   } catch (error) {
     res.status(error.status).send({ message: error.msg });
   }
