@@ -5,6 +5,7 @@ const {
   InitiateAuthCommand,
   DeleteUserCommand,
   ChangePasswordCommand,
+  ResendConfirmationCodeCommand,
 } = require("@aws-sdk/client-cognito-identity-provider");
 const { CognitoJwtVerifier } = require("aws-jwt-verify");
 const {
@@ -124,6 +125,23 @@ exports.confirmSignUp = async (email, code) => {
   } catch (error) {
     console.error("Error confirming sign up: ", error);
     throw error;
+  }
+};
+
+exports.resendConfirmationCode = async (email) => {
+  const secretHash = generateSecretHash(email);
+
+  const params = {
+    ClientId: clientId,
+    SecretHash: secretHash,
+    Username: email,
+  };
+  try {
+    const command = new ResendConfirmationCodeCommand(params);
+    const response = await cognitoClient.send(command);
+    return response
+  } catch (error) {
+    throw error
   }
 };
 

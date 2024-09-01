@@ -20,6 +20,7 @@ const {
   authenticateUser,
   removeUser,
   changeUserPassword,
+  triggerConfirmationCodeResend,
 } = require("../models/auth.model");
 
 jest.mock("../models/order.model", () => ({
@@ -635,12 +636,78 @@ describe("PATCH /change-password", () => {
     const mockErrorMessage = { status: 400, msg: "mock error" };
 
     changeUserPassword.mockImplementationOnce(() => {
-      throw mockErrorMessage
-    })
+      throw mockErrorMessage;
+    });
 
     return request(app)
       .patch("/change-password")
       .set("Authorization", `Bearer ${accessToken}`)
+      .send(input)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.message).toBe(mockErrorMessage.msg);
+      });
+  });
+});
+
+describe("POST /resend-confirmation-code", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("should when successful respond with a 200 status code", async () => {
+    const input = {
+      email: "test@test.com",
+    };
+
+    return request(app)
+      .post("/resend-confirmation-code")
+      .send(input)
+      .expect(200);
+  });
+  it("should call triggerConfirmationCodeResend with eh correct argument", async () => {
+    const input = {
+      email: "test@test.com",
+    };
+
+    return request(app)
+      .post("/resend-confirmation-code")
+      .send(input)
+      .expect(200)
+      .then(() => {
+        expect(triggerConfirmationCodeResend).toHaveBeenCalled();
+        expect(triggerConfirmationCodeResend).toHaveBeenCalledWith(input.email);
+      });
+  });
+  it("should when successful respond with a codeDeliveryData object", async () => {
+    const input = {
+      email: "test@test.com",
+    };
+    const mockResponse = "Success.";
+
+    triggerConfirmationCodeResend.mockImplementationOnce(() => {
+      return Promise.resolve(mockResponse);
+    });
+
+    return request(app)
+      .post("/resend-confirmation-code")
+      .send(input)
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.codeDeliveryData).toBe(mockResponse);
+      });
+  });
+  it("should handle errors thrown by triggerConfirmationCodeResend", async () => {
+    const input = {
+      email: "test@test.com",
+    };
+    const mockErrorMessage = { status: 400, msg: "mock error" };
+
+    triggerConfirmationCodeResend.mockImplementationOnce(() => {
+      throw mockErrorMessage;
+    });
+
+    return request(app)
+      .post("/resend-confirmation-code")
       .send(input)
       .expect(400)
       .then(({ body }) => {
