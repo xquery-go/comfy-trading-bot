@@ -21,6 +21,8 @@ const {
   removeUser,
   changeUserPassword,
   triggerConfirmationCodeResend,
+  resetUserPassword,
+  confirmResetUserPassword,
 } = require("../models/auth.model");
 
 jest.mock("../models/order.model", () => ({
@@ -708,6 +710,144 @@ describe("POST /resend-confirmation-code", () => {
 
     return request(app)
       .post("/resend-confirmation-code")
+      .send(input)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.message).toBe(mockErrorMessage.msg);
+      });
+  });
+});
+
+describe("POST /forgot-password", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("should when successful respond with a 200 status code", async () => {
+    const input = {
+      email: "test@test.com",
+    };
+
+    return request(app).post("/forgot-password").expect(200).send(input);
+  });
+  it("should call resetUserPassword with the correct argument", async () => {
+    const input = {
+      email: "test@test.com",
+    };
+
+    return request(app)
+      .post("/forgot-password")
+      .expect(200)
+      .send(input)
+      .then(() => {
+        expect(resetUserPassword).toHaveBeenCalled();
+        expect(resetUserPassword).toHaveBeenCalledWith(input.email);
+      });
+  });
+  it("should when successful respond with a codeDeliveryData object", async () => {
+    const input = {
+      email: "test@test.com",
+    };
+    const mockResponse = "Success.";
+
+    resetUserPassword.mockImplementationOnce(() => {
+      return Promise.resolve(mockResponse);
+    });
+
+    return request(app)
+      .post("/forgot-password")
+      .expect(200)
+      .send(input)
+      .then(({ body }) => {
+        expect(body.codeDeliveryData).toBe(mockResponse);
+      });
+  });
+  it("should handle errors thrown by resetUserPassword", async () => {
+    const input = {
+      email: "test@test.com",
+    };
+    const mockErrorMessage = { status: 400, msg: "mock error" };
+
+    resetUserPassword.mockImplementationOnce(() => {
+      throw mockErrorMessage;
+    });
+
+    return request(app)
+      .post("/forgot-password")
+      .send(input)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.message).toBe(mockErrorMessage.msg);
+      });
+  });
+});
+
+describe("POST /confirm-forgot-password", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("should when successful respond with a 200 status code", async () => {
+    const input = {
+      email: "test@test.com",
+      password: "password",
+      code: "code",
+    };
+
+    return request(app).post("/confirm-forgot-password").expect(200);
+  });
+  it("should call confirmResetUserPassword", async () => {
+    const input = {
+      email: "test@test.com",
+      password: "password",
+      code: "code",
+    };
+
+    return request(app)
+      .post("/confirm-forgot-password")
+      .send(input)
+      .expect(200)
+      .then(() => {
+        expect(confirmResetUserPassword).toHaveBeenCalled();
+        expect(confirmResetUserPassword).toHaveBeenCalledWith(
+          input.email,
+          input.password,
+          input.code
+        );
+      });
+  });
+  it("should when successful respond with a confirmationMessage", async () => {
+    const input = {
+      email: "test@test.com",
+      password: "password",
+      code: "code",
+    };
+    const mockResponse = "Success.";
+
+    confirmResetUserPassword.mockImplementationOnce(() => {
+      return Promise.resolve(mockResponse);
+    });
+
+    return request(app)
+      .post("/confirm-forgot-password")
+      .send(input)
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.confirmationMessage).toBe(mockResponse);
+      });
+  });
+  it("should handle errors thrown by confirmResetUserPassword", async () => {
+    const input = {
+      email: "test@test.com",
+      password: "password",
+      code: "code",
+    };
+    const mockErrorMessage = { status: 400, msg: "mock error" };
+
+    confirmResetUserPassword.mockImplementationOnce(() => {
+      throw mockErrorMessage;
+    });
+
+    return request(app)
+      .post("/confirm-forgot-password")
       .send(input)
       .expect(400)
       .then(({ body }) => {

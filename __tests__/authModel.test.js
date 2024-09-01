@@ -5,6 +5,8 @@ const {
   removeUser,
   changeUserPassword,
   triggerConfirmationCodeResend,
+  resetUserPassword,
+  confirmResetUserPassword,
 } = require("../models/auth.model");
 const {
   signUp,
@@ -13,6 +15,8 @@ const {
   deleteUser,
   changePassword,
   resendConfirmationCode,
+  sendForgotPasswordCode,
+  resetPassword,
 } = require("../utils/cognito");
 jest.mock("../utils/cognito");
 
@@ -264,6 +268,90 @@ describe("triggerConfirmationCodeResend", () => {
     });
 
     await expect(triggerConfirmationCodeResend(input)).rejects.toEqual({
+      status: 400,
+      msg: "Something went wrong",
+    });
+  });
+});
+
+describe("resetUserPassword", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("should call sendForgotPasswordCode with the correct argument", async () => {
+    const input = "test@test.com";
+
+    await resetUserPassword(input);
+
+    expect(sendForgotPasswordCode).toHaveBeenCalled();
+    expect(sendForgotPasswordCode).toHaveBeenCalledWith(input);
+  });
+  it("should return the output of sendForgotPasswordCode", async () => {
+    const input = "test@test.com";
+    const mockResponse = "Success.";
+
+    sendForgotPasswordCode.mockImplementationOnce(() => {
+      return Promise.resolve(mockResponse);
+    });
+
+    const actual = await resetUserPassword(input);
+
+    expect(actual).toBe(mockResponse);
+  });
+  it("should handle errors thrown by sendForgotPasswordCode", async () => {
+    const input = "test@test.com";
+    const mockErrorMessage = {
+      $metadata: {
+        httpStatusCode: 400,
+      },
+      message: "Something went wrong",
+    };
+
+    sendForgotPasswordCode.mockImplementationOnce(() => {
+      return Promise.reject(mockErrorMessage);
+    });
+
+    await expect(resetUserPassword(input)).rejects.toEqual({
+      status: 400,
+      msg: "Something went wrong",
+    });
+  });
+});
+
+describe("confirmResetUserPassword", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("should call resetPassword with the correct arguments", async () => {
+    const input = ["test@test.com", "password", "12345"];
+
+    await confirmResetUserPassword(...input);
+
+    expect(resetPassword).toHaveBeenCalled();
+    expect(resetPassword).toHaveBeenCalledWith(...input);
+  });
+  it("should when successful return a confirmation message", async () => {
+    const input = ["test@test.com", "password", "12345"];
+    const mockResponse = "Password reset successful.";
+
+    const actual = await confirmResetUserPassword(...input);
+
+    expect(actual).toBe(mockResponse);
+  });
+  it("should handle errors thrown by resetPassword", async () => {
+    const input = ["test@test.com", "password", "12345"];
+    const mockErrorMessage = {
+      $metadata: {
+        httpStatusCode: 400,
+      },
+      message: "Something went wrong",
+    };
+
+    resetPassword.mockImplementationOnce(() => {
+      return Promise.reject(mockErrorMessage);
+    });
+
+    await expect(confirmResetUserPassword(...input)).rejects.toEqual({
       status: 400,
       msg: "Something went wrong",
     });
