@@ -5,6 +5,8 @@ const {
   deleteUser,
   changePassword,
   resendConfirmationCode,
+  sendForgotPasswordCode,
+  resetPassword,
 } = require("../utils/cognito");
 
 exports.createUser = async (email, password) => {
@@ -82,6 +84,32 @@ exports.triggerConfirmationCodeResend = async (email) => {
   try {
     const response = await resendConfirmationCode(email);
     return response;
+  } catch (error) {
+    const errorMessage = {
+      status: error.$metadata.httpStatusCode,
+      msg: error.message,
+    };
+    throw errorMessage;
+  }
+};
+
+exports.resetUserPassword = async (email) => {
+  try {
+    const response = await sendForgotPasswordCode(email);
+    return response;
+  } catch (error) {
+    const errorMessage = {
+      status: error.$metadata.httpStatusCode,
+      msg: error.message,
+    };
+    throw errorMessage;
+  }
+};
+
+exports.confirmResetUserPassword = async (email, password, code) => {
+  try {
+    await resetPassword(email, password, code);
+    return "Password reset successful.";
   } catch (error) {
     const errorMessage = {
       status: error.$metadata.httpStatusCode,

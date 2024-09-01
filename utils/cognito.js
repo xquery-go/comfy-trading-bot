@@ -6,6 +6,8 @@ const {
   DeleteUserCommand,
   ChangePasswordCommand,
   ResendConfirmationCodeCommand,
+  ForgotPasswordCommand,
+  ConfirmForgotPasswordCommand,
 } = require("@aws-sdk/client-cognito-identity-provider");
 const { CognitoJwtVerifier } = require("aws-jwt-verify");
 const {
@@ -139,9 +141,9 @@ exports.resendConfirmationCode = async (email) => {
   try {
     const command = new ResendConfirmationCodeCommand(params);
     const response = await cognitoClient.send(command);
-    return response
+    return response;
   } catch (error) {
-    throw error
+    throw error;
   }
 };
 
@@ -169,6 +171,40 @@ exports.changePassword = async (accessToken, prevPass, proPass) => {
     await cognitoClient.send(command);
   } catch (error) {
     console.error("Error deleting user: ", error);
+    throw error;
+  }
+};
+
+exports.sendForgotPasswordCode = (email) => {
+  const secretHash = generateSecretHash(email);
+  const params = {
+    ClientId: clientId,
+    SecretHash: secretHash,
+    Username: email,
+  };
+  try {
+    const command = new ForgotPasswordCommand(params);
+    const response = cognitoClient.send(command);
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+exports.resetPassword = async (email, password, code) => {
+  const secretHash = generateSecretHash(email);
+  const params = {
+    ClientId: clientId,
+    SecretHash: secretHash,
+    Username: email,
+    Password: password,
+    ConfirmationCode: code,
+  };
+  try {
+    const command = new ConfirmForgotPasswordCommand(params);
+    const response = await cognitoClient.send(command);
+    return response;
+  } catch (error) {
     throw error;
   }
 };

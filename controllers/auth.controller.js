@@ -3,6 +3,8 @@ const {
   removeUser,
   changeUserPassword,
   triggerConfirmationCodeResend,
+  resetUserPassword,
+  confirmResetUserPassword,
 } = require("../models/auth.model");
 const { createUser, validateUser } = require("../models/auth.model");
 
@@ -67,6 +69,30 @@ exports.resendAccountConfirmation = async (req, res) => {
   try {
     const codeDeliveryData = await triggerConfirmationCodeResend(email);
     res.status(200).send({ codeDeliveryData });
+  } catch (error) {
+    res.status(error.status).send({ message: error.msg });
+  }
+};
+
+exports.userForgotPassword = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const codeDeliveryData = await resetUserPassword(email);
+    res.status(200).send({ codeDeliveryData });
+  } catch (error) {
+    res.status(error.status).send({ message: error.msg });
+  }
+};
+
+exports.userConfirmForgotPassword = async (req, res) => {
+  const { email, password, code } = req.body;
+  try {
+    const confirmationMessage = await confirmResetUserPassword(
+      email,
+      password,
+      code
+    );
+    res.status(200).send({ confirmationMessage });
   } catch (error) {
     res.status(error.status).send({ message: error.msg });
   }
