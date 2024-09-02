@@ -19,6 +19,7 @@ const {
   resendAccountConfirmation,
   userForgotPassword,
   userConfirmForgotPassword,
+  userSignOut,
 } = require("./controllers/auth.controller");
 const { verifyAccessToken } = require("./utils/cognito");
 
@@ -40,6 +41,7 @@ app.post("/register", userSignUp);
 app.post("/confirm-sign-up", confirmUser);
 app.post("/resend-confirmation-code", resendAccountConfirmation);
 app.post("/sign-in", userSignIn);
+app.post("/sign-out", verifyAccessToken, userSignOut)
 app.post("/forgot-password", userForgotPassword);
 app.post("/confirm-forgot-password", userConfirmForgotPassword);
 app.patch("/change-password", verifyAccessToken, changeUserPasswordByToken);

@@ -5,6 +5,7 @@ const {
   triggerConfirmationCodeResend,
   resetUserPassword,
   confirmResetUserPassword,
+  signOutUser,
 } = require("../models/auth.model");
 const { createUser, validateUser } = require("../models/auth.model");
 
@@ -94,6 +95,18 @@ exports.userConfirmForgotPassword = async (req, res) => {
     );
     res.status(200).send({ confirmationMessage });
   } catch (error) {
+    res.status(error.status).send({ message: error.msg });
+  }
+};
+
+exports.userSignOut = async (req, res) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  try {
+    const confirmationMessage = await signOutUser(token);
+    res.status(200).send({ confirmationMessage });
+  } catch (error) {
+    console.log('hello');
+    
     res.status(error.status).send({ message: error.msg });
   }
 };
