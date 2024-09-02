@@ -8,6 +8,7 @@ const {
   ResendConfirmationCodeCommand,
   ForgotPasswordCommand,
   ConfirmForgotPasswordCommand,
+  GlobalSignOutCommand,
 } = require("@aws-sdk/client-cognito-identity-provider");
 const { CognitoJwtVerifier } = require("aws-jwt-verify");
 const {
@@ -205,6 +206,21 @@ exports.resetPassword = async (email, password, code) => {
     const response = await cognitoClient.send(command);
     return response;
   } catch (error) {
+    throw error;
+  }
+};
+
+exports.signOut = async (token) => {
+  const params = {
+    AccessToken: token,
+  };
+  try {
+    const command = new GlobalSignOutCommand(params);
+    const response = await cognitoClient.send(command);
+    return response;
+  } catch (error) {
+    console.log(error, '<<<<');
+    
     throw error;
   }
 };

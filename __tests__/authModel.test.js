@@ -7,6 +7,7 @@ const {
   triggerConfirmationCodeResend,
   resetUserPassword,
   confirmResetUserPassword,
+  signOutUser,
 } = require("../models/auth.model");
 const {
   signUp,
@@ -17,6 +18,7 @@ const {
   resendConfirmationCode,
   sendForgotPasswordCode,
   resetPassword,
+  signOut,
 } = require("../utils/cognito");
 jest.mock("../utils/cognito");
 
@@ -352,6 +354,46 @@ describe("confirmResetUserPassword", () => {
     });
 
     await expect(confirmResetUserPassword(...input)).rejects.toEqual({
+      status: 400,
+      msg: "Something went wrong",
+    });
+  });
+});
+
+describe("signOutUser", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("should call signOut with the correct argument", async () => {
+    const input = "token";
+
+    await signOutUser(input);
+
+    expect(signOut).toHaveBeenCalled();
+    expect(signOut).toHaveBeenCalledWith(input);
+  });
+  it("should when successful return a confirmation message", async () => {
+    const input = "token";
+    const expected = "Sign out successful.";
+
+    const actual = await signOutUser(input);
+
+    expect(actual).toBe(expected);
+  });
+  it("should handle errors thrown by signOut", async () => {
+    const input = "token";
+    const mockErrorMessage = {
+      $metadata: {
+        httpStatusCode: 400,
+      },
+      message: "Something went wrong",
+    };
+
+    signOut.mockImplementationOnce(() => {
+      return Promise.reject(mockErrorMessage);
+    });
+
+    await expect(signOutUser(input)).rejects.toEqual({
       status: 400,
       msg: "Something went wrong",
     });

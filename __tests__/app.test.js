@@ -23,6 +23,7 @@ const {
   triggerConfirmationCodeResend,
   resetUserPassword,
   confirmResetUserPassword,
+  signOutUser,
 } = require("../models/auth.model");
 
 jest.mock("../models/order.model", () => ({
@@ -849,6 +850,64 @@ describe("POST /confirm-forgot-password", () => {
     return request(app)
       .post("/confirm-forgot-password")
       .send(input)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.message).toBe(mockErrorMessage.msg);
+      });
+  });
+});
+
+describe("POST /sign-out", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("should when successful respond with a 200 status code", async () => {
+    const accessToken = "token";
+
+    return request(app)
+      .post("/sign-out")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200);
+  });
+  it("should call signOutUser with the correct argument", async () => {
+    const accessToken = "token";
+
+    return request(app)
+      .post("/sign-out")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200)
+      .then(() => {
+        expect(signOutUser).toHaveBeenCalled();
+        expect(signOutUser).toHaveBeenCalledWith(accessToken);
+      });
+  });
+  it("should when successful respond with a confirmation message", async () => {
+    const accessToken = "token";
+    const mockResponse = "success";
+
+    signOutUser.mockImplementationOnce(() => {
+      return Promise.resolve(mockResponse);
+    });
+
+    return request(app)
+      .post("/sign-out")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.confirmationMessage).toBe(mockResponse);
+      });
+  });
+  it("should handle errors thrown by signOutUser", async () => {
+    const accessToken = "token";
+    const mockErrorMessage = { status: 400, msg: "mock error" };
+
+    signOutUser.mockImplementationOnce(() => {
+      throw mockErrorMessage;
+    });
+
+    return request(app)
+      .post("/sign-out")
+      .set("Authorization", `Bearer ${accessToken}`)
       .expect(400)
       .then(({ body }) => {
         expect(body.message).toBe(mockErrorMessage.msg);
