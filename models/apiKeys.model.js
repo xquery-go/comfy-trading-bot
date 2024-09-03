@@ -1,4 +1,5 @@
 const db = require("../db/connection");
+const apiKeys = require("../db/test-data/apiKeys");
 const { verifyUsernameByToken } = require("../utils/verification");
 
 exports.selectUserApiKeys = async (username, token) => {
@@ -36,6 +37,32 @@ exports.addUserApiKeys = async (username, email, apiKey, privateKey, token) => {
         INSERT INTO api_keys 
         (username, email, api_key, private_key) 
         VALUES ($1, $2, $3, $4) 
+        RETURNING *
+        `,
+      queryValues
+    );
+    return response.rows[0];
+  } catch (error) {
+    throw error;
+  }
+};
+
+exports.updateApiKeysByUser = async (username, apiKey, privateKey, token) => {
+  try {
+    verifyUsernameByToken(username, token);
+
+    if (!apiKey || !privateKey) {
+      throw { status: 400, message: "Missing required field." };
+    }
+
+    const queryValues = [username, apiKey, privateKey];
+
+    const response = await db.query(
+      `
+        UPDATE api_keys
+        SET api_key = $2,
+        private_key = $3
+        WHERE username = $1
         RETURNING *
         `,
       queryValues

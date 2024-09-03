@@ -25,6 +25,7 @@ const { verifyAccessToken } = require("./utils/cognito");
 const {
   getUserApiKeys,
   postUserApiKeys,
+  patchUserApiKeys
 } = require("./controllers/apiKeys.controller");
 const { handlePsqlErrors } = require("./errors/errorHandlers");
 
@@ -55,6 +56,7 @@ app.delete("/delete-user", verifyAccessToken, deleteUserByToken);
 // Database
 app.get("/api-keys/:username", verifyAccessToken, getUserApiKeys);
 app.post("/api-keys/:username", verifyAccessToken, postUserApiKeys);
+app.patch("/api-keys/:username", verifyAccessToken, patchUserApiKeys);
 
 app.use(handlePsqlErrors);
 
