@@ -1096,3 +1096,75 @@ describe("POST /api-keys/:username", () => {
       });
   });
 });
+
+describe("PATCH /api-keys/:username", () => {
+  it("should when successful respond with a 200 status code, and an object containing the updated entry", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+    const input = {
+      apiKey: "new_key",
+      privateKey: "new_private_key_john_doe",
+    };
+
+    const expected = {
+      username: "john_doe",
+      email: "john.doe@example.com",
+      api_key: "new_key",
+      private_key: "new_private_key_john_doe",
+    };
+    return request(app)
+      .patch("/api-keys/john_doe")
+      .expect(200)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send(input)
+      .then(({ body }) => {
+        expect(body.updatedData).toEqual(expected);
+      });
+  });
+  it("should respond with a 401 status code and unauthorized when token username and params dont match", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "james_bond",
+      },
+      "secret"
+    );
+    const input = {
+      apiKey: "test_api_key",
+      privateKey: "test_private_key",
+    };
+    const mockErrorMessage = "Unauthorized access.";
+
+    return request(app)
+      .patch("/api-keys/john_doe")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send(input)
+      .expect(401)
+      .then(({ body }) => {
+        expect(body.message).toBe(mockErrorMessage);
+      });
+  });
+  it("should respond with 400 and Missing required field, when not given either api key ir private key", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+    const input = {
+      privateKey: "new_private_key_john_doe",
+    };
+
+    return request(app)
+      .patch("/api-keys/john_doe")
+      .expect(400)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send(input)
+      .then(({ body }) => {
+        expect(body.message).toBe("Missing required field.");
+      });
+  });
+});
