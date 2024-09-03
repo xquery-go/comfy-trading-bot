@@ -22,7 +22,11 @@ const {
   userSignOut,
 } = require("./controllers/auth.controller");
 const { verifyAccessToken } = require("./utils/cognito");
-const { getUserApiKeys } = require("./controllers/apiKeys.controller");
+const {
+  getUserApiKeys,
+  postUserApiKeys,
+} = require("./controllers/apiKeys.controller");
+const { handlePsqlErrors } = require("./errors/errorHandlers");
 
 const app = express();
 
@@ -50,5 +54,8 @@ app.delete("/delete-user", verifyAccessToken, deleteUserByToken);
 
 // Database
 app.get("/api-keys/:username", verifyAccessToken, getUserApiKeys);
+app.post("/api-keys/:username", verifyAccessToken, postUserApiKeys);
+
+app.use(handlePsqlErrors);
 
 module.exports = app;

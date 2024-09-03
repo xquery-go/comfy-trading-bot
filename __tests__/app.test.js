@@ -30,7 +30,7 @@ const {
 } = require("../models/auth.model");
 const { seed } = require("../db/seeds/seed");
 
-beforeAll(async () => {
+beforeEach(async () => {
   await seed(testData); // Seed the database with test data
 });
 
@@ -927,7 +927,7 @@ describe("POST /sign-out", () => {
   });
 });
 
-describe.only("GET /api-keys/:username", () => {
+describe("GET /api-keys/:username", () => {
   it("should when successful respond with a 200 status code", async () => {
     const accessToken = jwt.sign(
       {
@@ -968,31 +968,131 @@ describe.only("GET /api-keys/:username", () => {
       },
       "secret"
     );
-    const mockErrorMessage = 'Unauthorized access.'
+    const mockErrorMessage = "Unauthorized access.";
 
     return request(app)
       .get("/api-keys/john_doe")
       .expect(401)
       .set("Authorization", `Bearer ${accessToken}`)
       .then(({ body }) => {
-        expect(body.message).toBe(mockErrorMessage)
+        expect(body.message).toBe(mockErrorMessage);
       });
   });
-  it('should respond with status code 404 and Not found if the user does not exist in database', async () => {
+  it("should respond with status code 404 and Not found if the user does not exist in database", async () => {
     const accessToken = jwt.sign(
       {
         username: "james_bond",
       },
       "secret"
     );
-    const mockErrorMessage = 'Not found.'
+    const mockErrorMessage = "Not found.";
 
     return request(app)
-    .get("/api-keys/james_bond")
-    .expect(404)
-    .set("Authorization", `Bearer ${accessToken}`)
-    .then(({ body }) => {
-      expect(body.message).toBe(mockErrorMessage)
-    });
+      .get("/api-keys/james_bond")
+      .expect(404)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .then(({ body }) => {
+        expect(body.message).toBe(mockErrorMessage);
+      });
+  });
+});
+
+describe("POST /api-keys/:username", () => {
+  it("should when successful respond with a 201 status code, and an object of the newly added entry", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "test_user",
+      },
+      "secret"
+    );
+    const input = {
+      username: "test_user",
+      email: "test@test.com",
+      apiKey: "test_api_key",
+      privateKey: "test_private_key",
+    };
+
+    return request(app)
+      .post("/api-keys/test_user")
+      .expect(201)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send(input)
+      .then(({ body }) => {
+        expect(body.apiKeysData).toEqual({
+          username: "test_user",
+          email: "test@test.com",
+          api_key: "test_api_key",
+          private_key: "test_private_key",
+        });
+      });
+  });
+  it("should respond with a 401 status code and unauthorized when token username and params dont match", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "james_bond",
+      },
+      "secret"
+    );
+    const input = {
+      username: "test_user",
+      email: "test@test.com",
+      apiKey: "test_api_key",
+      privateKey: "test_private_key",
+    };
+    const mockErrorMessage = "Unauthorized access.";
+
+    return request(app)
+      .post("/api-keys/test_user")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send(input)
+      .expect(401)
+      .then(({ body }) => {
+        expect(body.message).toBe(mockErrorMessage);
+      });
+  });
+  it("should respond with 400 and Bad request, if the user entry already exists", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+    const input = {
+      username: "john_doe",
+      email: "john.doe@example.com",
+      apiKey: "123abc456def",
+      privateKey: "private_key_john_doe",
+    };
+
+    return request(app)
+      .post("/api-keys/john_doe")
+      .expect(400)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send(input)
+      .then(({ body }) => {
+        expect(body.message).toBe("Bad Request: Already Exists");
+      });
+  });
+  it("should respond with 400 and Bad request if missing required field", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "test_user",
+      },
+      "secret"
+    );
+    const input = {
+      username: "test_user",
+      email: "test@test.com",
+      privateKey: "private_key_john_doe",
+    };
+
+    return request(app)
+      .post("/api-keys/test_user")
+      .expect(400)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send(input)
+      .then(({ body }) => {
+        expect(body.message).toBe("Bad Request: Missing Required Field");
+      });
   });
 });
