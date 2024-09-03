@@ -3,6 +3,7 @@ const axios = require("axios");
 const { URLSearchParams } = require("url");
 const { apiKey, apiSecret } = require("./keys");
 
+
 const kraken = axios.create({
   baseURL: "https://api.kraken.com",
   headers: {
@@ -57,17 +58,16 @@ exports.krakenRequest = async (path, request) => {
 };
 
 exports.validateOrderInputs = (type, volume, price, stopLoss) => {
-  
   if (type && type !== "buy" && type !== "sell") {
     throw new Error("Invalid order type");
   }
-  if (volume && isNaN(volume) || volume <= 0) {
+  if ((volume && isNaN(volume)) || volume <= 0) {
     throw new Error("Invalid volume specified");
   }
-  if (price && isNaN(price) || price <= 0) {
+  if ((price && isNaN(price)) || price <= 0) {
     throw new Error("Invalid price specified");
   }
-  if (stopLoss && isNaN(stopLoss) || stopLoss <= 0) {
+  if ((stopLoss && isNaN(stopLoss)) || stopLoss <= 0) {
     throw new Error("Invalid stop loss specified");
   }
 };
@@ -75,3 +75,4 @@ exports.validateOrderInputs = (type, volume, price, stopLoss) => {
 exports.roundToTwoDecimals = (num) => {
   return Math.round(num * 100) / 100;
 };
+
