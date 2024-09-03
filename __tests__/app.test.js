@@ -1,5 +1,8 @@
 const request = require("supertest");
 const app = require("../app");
+const testData = require("../db/test-data/apiKeys");
+const db = require("../db/connection");
+const jwt = require("jsonwebtoken");
 const {
   createOrder,
   createTakeProfitOrder,
@@ -25,6 +28,15 @@ const {
   confirmResetUserPassword,
   signOutUser,
 } = require("../models/auth.model");
+const { seed } = require("../db/seeds/seed");
+
+beforeAll(async () => {
+  await seed(testData); // Seed the database with test data
+});
+
+afterAll(async () => {
+  await db.end(); // Close the database connection
+});
 
 jest.mock("../models/order.model", () => ({
   createOrder: jest.fn(),
@@ -912,5 +924,75 @@ describe("POST /sign-out", () => {
       .then(({ body }) => {
         expect(body.message).toBe(mockErrorMessage.msg);
       });
+  });
+});
+
+describe.only("GET /api-keys/:username", () => {
+  it("should when successful respond with a 200 status code", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+
+    return request(app)
+      .get("/api-keys/john_doe")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200);
+  });
+  it("should when successful respond with an apiKeysData object", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+
+    return request(app)
+      .get("/api-keys/john_doe")
+      .expect(200)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .then(({ body }) => {
+        expect(body.apiKeysData).toMatchObject({
+          username: "john_doe",
+          apiKey: expect.any(String),
+          privateKey: expect.any(String),
+        });
+      });
+  });
+  it("should respond with a 401 status code and unauthorized when token username and params dont match", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "james_bond",
+      },
+      "secret"
+    );
+    const mockErrorMessage = 'Unauthorized access.'
+
+    return request(app)
+      .get("/api-keys/john_doe")
+      .expect(401)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .then(({ body }) => {
+        expect(body.message).toBe(mockErrorMessage)
+      });
+  });
+  it('should respond with status code 404 and Not found if the user does not exist in database', async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "james_bond",
+      },
+      "secret"
+    );
+    const mockErrorMessage = 'Not found.'
+
+    return request(app)
+    .get("/api-keys/james_bond")
+    .expect(404)
+    .set("Authorization", `Bearer ${accessToken}`)
+    .then(({ body }) => {
+      expect(body.message).toBe(mockErrorMessage)
+    });
   });
 });

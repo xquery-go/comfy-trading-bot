@@ -1,0 +1,3 @@
+DROP DATABASE IF EXISTS comfy_test;
+
+CREATE DATABASE comfy_test;
