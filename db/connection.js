@@ -1,10 +1,19 @@
 const { Pool } = require("pg");
-const ENV = process.env.NODE_ENV;
-
 require("dotenv").config();
 
-if (!process.env.PGDATABASE && !process.env.DATABASE_URL) {
-  throw new Error("PGDATABASE or DATABASE_URL not set");
+const ENV = process.env.NODE_ENV || "development";
+
+const config = {};
+
+if (ENV !== "test") {
+  config.user = process.env.RDS_USER;
+  config.password = process.env.RDS_PASSWORD;
+  config.host = process.env.RDS_HOST;
+  config.port = process.env.RDS_PORT;
+  config.database = process.env.RDS_DB;
+  config.ssl = {
+    rejectUnauthorized: false, // For development, adjust as needed
+  };
 }
 
-module.exports = new Pool();
+module.exports = new Pool(config);

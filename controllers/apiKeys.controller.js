@@ -2,6 +2,7 @@ const {
   selectUserApiKeys,
   addUserApiKeys,
   updateApiKeysByUser,
+  removeUserApiKeys,
 } = require("../models/apiKeys.model");
 const { verifyUsernameByToken } = require("../utils/verification");
 
@@ -51,6 +52,20 @@ exports.patchUserApiKeys = async (req, res, next) => {
       token
     );
     res.status(200).send({ updatedData });
+  } catch (error) {
+    if (!error.status) {
+      next(error);
+    }
+    res.status(error.status).send({ message: error.message });
+  }
+};
+
+exports.deleteUserApiKeys = async (req, res, next) => {
+  const { username } = req.params;
+  const token = req.headers.authorization?.split(" ")[1];
+  try {
+    await removeUserApiKeys(username, token);
+    res.status(204).send();
   } catch (error) {
     if (!error.status) {
       next(error);
