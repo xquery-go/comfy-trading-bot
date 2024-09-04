@@ -31,11 +31,11 @@ const {
 const { seed } = require("../db/seeds/seed");
 
 beforeEach(async () => {
-  await seed(testData); // Seed the database with test data
+  await seed(testData);
 });
 
 afterAll(async () => {
-  await db.end(); // Close the database connection
+  await db.end();
 });
 
 jest.mock("../models/order.model", () => ({
@@ -1165,6 +1165,63 @@ describe("PATCH /api-keys/:username", () => {
       .send(input)
       .then(({ body }) => {
         expect(body.message).toBe("Missing required field.");
+      });
+  });
+});
+
+describe("DELETE /api-keys/:username", () => {
+  it("should when successful respond with a 204 status code, and have deleted the selected database entry", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+
+    return request(app)
+      .delete("/api-keys/john_doe")
+      .expect(204)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .then(async () => {
+        const entry = await db.query(
+          `SELECT * FROM api_keys WHERE username = 'john_doe'`
+        );
+
+        expect(entry.rows.length).toBe(0);
+      });
+  });
+  it("should respond with a 401 status code and unauthorized when token username and params dont match", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "james_bond",
+      },
+      "secret"
+    );
+    const mockErrorMessage = "Unauthorized access.";
+
+    return request(app)
+      .delete("/api-keys/john_doe")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(401)
+      .then(({ body }) => {
+        expect(body.message).toBe(mockErrorMessage);
+      });
+  });
+  it("should respond with status code 404 and Not found, if the username does not exist in the database", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "james_bond",
+      },
+      "secret"
+    );
+    const mockErrorMessage = "Not found.";
+
+    return request(app)
+      .delete("/api-keys/james_bond")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.message).toBe(mockErrorMessage);
       });
   });
 });

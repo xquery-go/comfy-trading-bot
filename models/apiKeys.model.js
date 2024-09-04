@@ -1,5 +1,6 @@
 const db = require("../db/connection");
 const apiKeys = require("../db/test-data/apiKeys");
+const { checkUserExists } = require("../utils/dbUtils");
 const { verifyUsernameByToken } = require("../utils/verification");
 
 exports.selectUserApiKeys = async (username, token) => {
@@ -50,6 +51,7 @@ exports.addUserApiKeys = async (username, email, apiKey, privateKey, token) => {
 exports.updateApiKeysByUser = async (username, apiKey, privateKey, token) => {
   try {
     verifyUsernameByToken(username, token);
+    await checkUserExists(username)
 
     if (!apiKey || !privateKey) {
       throw { status: 400, message: "Missing required field." };
@@ -69,6 +71,23 @@ exports.updateApiKeysByUser = async (username, apiKey, privateKey, token) => {
     );
     return response.rows[0];
   } catch (error) {
-    throw error
+    throw error;
+  }
+};
+
+exports.removeUserApiKeys = async (username, token) => {
+  try {
+    verifyUsernameByToken(username, token);
+    await checkUserExists(username);
+
+    await db.query(
+      `
+            DELETE FROM api_keys
+            WHERE username = $1
+            `,
+      [username]
+    );
+  } catch (error) {
+    throw error;
   }
 };
