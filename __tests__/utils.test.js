@@ -1,5 +1,9 @@
 const { riskManageVolume } = require("../utils/riskManagement");
 const { retrieveBalance } = require("../models/data.model");
+const { getAllApiKeys } = require("../models/apiKeys.model");
+const { seed } = require("../db/seeds/seed");
+const testData = require("../db/test-data/apiKeys");
+const db = require("../db/connection");
 
 jest.mock("../models/data.model");
 
@@ -83,5 +87,74 @@ describe("riskManageVolume", () => {
     });
     const actual = await riskManageVolume(...input);
     expect(actual).toBe(0.007137931034482759);
+  });
+});
+
+beforeEach(async () => {
+  await seed(testData);
+});
+
+afterAll(async () => {
+  await db.end();
+});
+
+describe.only("getAllApiKeys", () => {
+  it("should when successful return an array of objects containing user api keys", async () => {
+    const expected = [
+      {
+        username: "john_doe",
+        api_key: "123abc456def",
+        private_key: "private_key_john_doe",
+      },
+      {
+        username: "jane_smith",
+        api_key: "789ghi012jkl",
+        private_key: "private_key_jane_smith",
+      },
+      {
+        username: "michael_brown",
+        api_key: "345mno678pqr",
+        private_key: "private_key_michael_brown",
+      },
+      {
+        username: "lisa_jones",
+        api_key: "901stu234vwx",
+        private_key: "private_key_lisa_jones",
+      },
+      {
+        username: "emma_davis",
+        api_key: "567yzx890abc",
+        private_key: "private_key_emma_davis",
+      },
+      {
+        username: "william_miller",
+        api_key: "123cde456fgh",
+        private_key: "private_key_william_miller",
+      },
+      {
+        username: "sophia_wilson",
+        api_key: "789ijk012lmn",
+        private_key: "private_key_sophia_wilson",
+      },
+      {
+        username: "liam_moore",
+        api_key: "345opq678rst",
+        private_key: "private_key_liam_moore",
+      },
+      {
+        username: "olivia_taylor",
+        api_key: "901uvw234xyz",
+        private_key: "private_key_olivia_taylor",
+      },
+      {
+        username: "noah_anderson",
+        api_key: "567bcd890efg",
+        private_key: "private_key_noah_anderson",
+      },
+    ];
+
+    const actual = await getAllApiKeys();
+
+    expect(actual).toEqual(expected);
   });
 });

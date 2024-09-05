@@ -2,15 +2,26 @@ const crypto = require("crypto");
 const axios = require("axios");
 const { URLSearchParams } = require("url");
 const { apiKey, apiSecret } = require("./keys");
+const { getAllApiKeys } = require("../models/apiKeys.model");
 
+// const kraken = axios.create({
+//   baseURL: "https://api.kraken.com",
+//   headers: {
+//     "API-Key": apiKey,
+//     "Content-Type": "application/x-www-form-urlencoded",
+//   },
+// });
 
-const kraken = axios.create({
-  baseURL: "https://api.kraken.com",
-  headers: {
-    "API-Key": apiKey,
-    "Content-Type": "application/x-www-form-urlencoded",
-  },
-});
+const createAxiosConnection = (apiKey) => {
+  const kraken = axios.create({
+    baseURL: "https://api.kraken.com",
+    headers: {
+      "API-Key": apiKey,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+  });
+  return kraken;
+};
 
 const getKrakenSignature = (path, request, secret, nonce) => {
   const message = new URLSearchParams(request).toString();
@@ -28,7 +39,7 @@ const createNonce = () => {
   return Date.now() * 1000;
 };
 
-exports.krakenRequest = async (path, request) => {
+exports.krakenRequest = async (path, request, apiKey, apiSecret) => {
   const nonce = createNonce();
   const signature = getKrakenSignature(
     path,
@@ -36,6 +47,8 @@ exports.krakenRequest = async (path, request) => {
     apiSecret,
     nonce
   );
+
+  const kraken = createAxiosConnection(apiKey);
 
   try {
     const response = await kraken.post(
@@ -75,4 +88,3 @@ exports.validateOrderInputs = (type, volume, price, stopLoss) => {
 exports.roundToTwoDecimals = (num) => {
   return Math.round(num * 100) / 100;
 };
-

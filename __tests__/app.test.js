@@ -61,7 +61,7 @@ describe("POST /create-order", () => {
   afterEach(() => {
     jest.restoreAllMocks();
   });
-  it("should respond with a 201 status code and order data on successful order placement", async () => {
+  it("should respond with a 201 status code and an array of user order data objects", async () => {
     const mockOrderDetails = {
       ticker: "BTCUSDT",
       action: "buy",
@@ -83,7 +83,12 @@ describe("POST /create-order", () => {
       .expect(201)
       .send(mockOrderDetails)
       .then(({ body }) => {
-        expect(body.orderData).toEqual(mockOrderData);
+        expect(Array.isArray(body.results)).toBe(true);
+        expect(body.results[0]).toMatchObject({
+          user: expect.any(String),
+          orderData: expect.any(Object),
+        });
+        expect(body.results[0].orderData).toEqual(mockOrderData);
         expect(createOrder).toHaveBeenCalled();
         expect(createOrder).toHaveBeenCalledWith(
           mockOrderDetails.action,
@@ -91,7 +96,9 @@ describe("POST /create-order", () => {
           mockOrderDetails.ticker,
           mockOrderDetails.price,
           mockOrderDetails.stopLoss,
-          mockOrderDetails.validate
+          mockOrderDetails.validate,
+          expect.any(String),
+          expect.any(String)
         );
       });
   });
@@ -117,13 +124,21 @@ describe("POST /create-order", () => {
       .expect(201)
       .send(mockOrderDetails)
       .then(({ body }) => {
-        expect(body.takeProfitOrderData).toEqual(mockTakeProftOrderData);
+        expect(body.results[0]).toMatchObject({
+          user: expect.any(String),
+          takeProfitOrderData: expect.any(Object),
+        });
+        expect(body.results[0].takeProfitOrderData).toEqual(
+          mockTakeProftOrderData
+        );
         expect(createTakeProfitOrder).toHaveBeenCalled();
         expect(createTakeProfitOrder).toHaveBeenCalledWith(
           mockOrderDetails.action,
           0.001,
           mockOrderDetails.takeProfit,
-          mockOrderDetails.validate
+          mockOrderDetails.validate,
+          expect.any(String),
+          expect.any(String)
         );
       });
   });
@@ -157,12 +172,20 @@ describe("GET /get-balance", () => {
     jest.restoreAllMocks();
   });
   it("should respond with 200 status code, and a balance data object", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+
     const mockBalanceData = { BTC: 1 };
 
     retrieveBalance.mockResolvedValue(mockBalanceData);
 
     return request(app)
       .get("/get-balance")
+      .set("Authorization", `Bearer ${accessToken}`)
       .expect(200)
       .then(({ body }) => {
         expect(retrieveBalance).toHaveBeenCalled();
@@ -170,6 +193,13 @@ describe("GET /get-balance", () => {
       });
   });
   it("should handle errors thrown by retrieveBalance", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+
     const errorMessage = "Something went wrong";
 
     retrieveBalance.mockImplementationOnce(() => {
@@ -178,6 +208,7 @@ describe("GET /get-balance", () => {
 
     return request(app)
       .get("/get-balance")
+      .set("Authorization", `Bearer ${accessToken}`)
       .expect(500)
       .then(({ body }) => {
         expect(body.error).toBe("Internal Server Error");
@@ -191,12 +222,20 @@ describe("PATCH /cancel-order", () => {
     jest.restoreAllMocks();
   });
   it("should respond with a 200 status code when successful, and confirmation of removed order", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+
     const mockRemovalData = { removeCount: 1 };
 
     removeOrderById.mockResolvedValue(mockRemovalData);
 
     return request(app)
       .patch("/cancel-order")
+      .set("Authorization", `Bearer ${accessToken}`)
       .expect(200)
       .then(({ body }) => {
         expect(removeOrderById).toHaveBeenCalled();
@@ -204,6 +243,13 @@ describe("PATCH /cancel-order", () => {
       });
   });
   it("should call removeOrderById with the correct parameters", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+
     const input = {
       txid: "order123",
     };
@@ -211,12 +257,24 @@ describe("PATCH /cancel-order", () => {
     return request(app)
       .patch("/cancel-order")
       .expect(200)
+      .set("Authorization", `Bearer ${accessToken}`)
       .send(input)
       .then(({ body }) => {
-        expect(removeOrderById).toHaveBeenCalledWith(input.txid);
+        expect(removeOrderById).toHaveBeenCalledWith(
+          input.txid,
+          expect.any(String),
+          expect.any(String)
+        );
       });
   });
   it("should handle errors thrown by removeOrderById", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+
     const input = {
       txid: "order123",
     };
@@ -229,6 +287,7 @@ describe("PATCH /cancel-order", () => {
 
     return request(app)
       .patch("/cancel-order")
+      .set("Authorization", `Bearer ${accessToken}`)
       .expect(500)
       .send(input)
       .then(({ body }) => {
@@ -243,12 +302,20 @@ describe("PATCH /cancel-all-orders", () => {
     jest.restoreAllMocks();
   });
   it("should respond with a 200 status code, and confirmation of removed orders", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+
     const mockRemovalData = { removeCount: 2 };
 
     removeAllOrders.mockResolvedValue(mockRemovalData);
 
     return request(app)
       .patch("/cancel-all-orders")
+      .set("Authorization", `Bearer ${accessToken}`)
       .expect(200)
       .then(({ body }) => {
         expect(removeAllOrders).toHaveBeenCalled();
@@ -256,13 +323,22 @@ describe("PATCH /cancel-all-orders", () => {
       });
   });
   it("should handle errors thrown by removeAllOrders", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+
     const errorMessage = "Something went wrong";
+
     removeAllOrders.mockImplementationOnce(() => {
       return Promise.reject(new Error(errorMessage));
     });
 
     return request(app)
       .patch("/cancel-all-orders")
+      .set("Authorization", `Bearer ${accessToken}`)
       .expect(500)
       .then(({ body }) => {
         expect(body.error).toBe("Internal Server Error");
@@ -276,12 +352,20 @@ describe("GET /get-open-orders", () => {
     jest.clearAllMocks();
   });
   it("should when successful respond with a 200 status code, and an openOrdersData object", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+
     const mockOpenOrdersData = { orderOne: "123" };
 
     retrieveOpenOrders.mockResolvedValue(mockOpenOrdersData);
 
     return request(app)
       .get("/get-open-orders")
+      .set("Authorization", `Bearer ${accessToken}`)
       .expect(200)
       .then(({ body }) => {
         expect(retrieveOpenOrders).toHaveBeenCalled();
@@ -289,6 +373,13 @@ describe("GET /get-open-orders", () => {
       });
   });
   it("should handle errors thrown by retrieveOpenOrders", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+
     const errorMessage = "Something went wrong";
 
     retrieveOpenOrders.mockImplementationOnce(() => {
@@ -298,6 +389,7 @@ describe("GET /get-open-orders", () => {
     return request(app)
       .get("/get-open-orders")
       .expect(500)
+      .set("Authorization", `Bearer ${accessToken}`)
       .then(({ body }) => {
         expect(body.error).toBe("Internal Server Error");
         expect(body.details).toBe(errorMessage);
@@ -310,6 +402,13 @@ describe("PATCH /edit-order", () => {
     jest.clearAllMocks();
   });
   it("should respond with a 200 status code and a updatedOrderData object", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+
     const input = { txid: "123", price: 50000 };
 
     const mockUpdatedOrderData = { orderOne: "123" };
@@ -318,14 +417,27 @@ describe("PATCH /edit-order", () => {
 
     return request(app)
       .patch("/edit-order")
+      .set("Authorization", `Bearer ${accessToken}`)
       .expect(200)
       .send(input)
       .then(({ body }) => {
-        expect(updateOrderById).toHaveBeenCalledWith(input.txid, input.price);
+        expect(updateOrderById).toHaveBeenCalledWith(
+          input.txid,
+          input.price,
+          expect.any(String),
+          expect.any(String)
+        );
         expect(body.updatedOrderData).toEqual(mockUpdatedOrderData);
       });
   });
   it("should handle errors thrown by updateOrderById", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+
     const input = { txid: "123", price: 50000 };
 
     const errorMessage = "Something went wrong";
@@ -336,6 +448,7 @@ describe("PATCH /edit-order", () => {
 
     return request(app)
       .patch("/edit-order")
+      .set("Authorization", `Bearer ${accessToken}`)
       .expect(500)
       .send(input)
       .then(({ body }) => {
@@ -350,12 +463,19 @@ describe("GET /get-pnl", () => {
     jest.clearAllMocks();
   });
   it("should respond with a 200 status code, a unrealisedPnl object and call retrievePnl", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
     const mockUnrealisedPnl = 100;
 
     retrievePnl.mockResolvedValue(mockUnrealisedPnl);
 
     return request(app)
       .get("/get-pnl")
+      .set("Authorization", `Bearer ${accessToken}`)
       .expect(200)
       .then(({ body }) => {
         expect(retrievePnl).toHaveBeenCalled();
@@ -363,6 +483,13 @@ describe("GET /get-pnl", () => {
       });
   });
   it("should handle errors thrown by retrievePnl", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+
     const errorMessage = "Something went wrong";
 
     retrievePnl.mockImplementationOnce(() => {
@@ -371,6 +498,7 @@ describe("GET /get-pnl", () => {
 
     return request(app)
       .get("/get-pnl")
+      .set("Authorization", `Bearer ${accessToken}`)
       .expect(500)
       .then(({ body }) => {
         expect(body.error).toBe("Internal Server Error");

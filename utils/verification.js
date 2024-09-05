@@ -6,3 +6,10 @@ exports.verifyUsernameByToken = (username, token) => {
     throw { status: 401, message: "Unauthorized access." };
   }
 };
+
+exports.testRoute = (req, res, next) => {
+  if (process.env.NODE_ENV === "test") {
+    req.user = { username: "john_doe" };
+  }
+  next();
+};
