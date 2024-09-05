@@ -1,8 +1,15 @@
 const { retrieveBalance } = require("../models/data.model");
 const { roundToTwoDecimals } = require("../utils/helperFunctions");
 
-exports.riskManageVolume = async (entry, stopLoss, riskPerc, baseCurrency) => {
-  const accountBalance = await retrieveBalance();
+exports.riskManageVolume = async (
+  entry,
+  stopLoss,
+  riskPerc,
+  baseCurrency,
+  apiKey,
+  apiSecret
+) => {
+  const accountBalance = await retrieveBalance(apiKey, apiSecret);
 
   const roundedAccountBalance = roundToTwoDecimals(
     accountBalance[baseCurrency]

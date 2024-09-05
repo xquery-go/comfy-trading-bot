@@ -51,7 +51,7 @@ exports.addUserApiKeys = async (username, email, apiKey, privateKey, token) => {
 exports.updateApiKeysByUser = async (username, apiKey, privateKey, token) => {
   try {
     verifyUsernameByToken(username, token);
-    await checkUserExists(username)
+    await checkUserExists(username);
 
     if (!apiKey || !privateKey) {
       throw { status: 400, message: "Missing required field." };
@@ -89,5 +89,18 @@ exports.removeUserApiKeys = async (username, token) => {
     );
   } catch (error) {
     throw error;
+  }
+};
+
+exports.getAllApiKeys = async () => {
+  try {
+    const response = await db.query(
+      `
+      SELECT username, api_key, private_key FROM api_keys
+      `
+    );
+    return response.rows
+  } catch (error) {
+    throw error
   }
 };

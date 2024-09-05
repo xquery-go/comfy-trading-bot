@@ -9,7 +9,9 @@ exports.createOrder = async (
   pair,
   price,
   stopLoss,
-  validate = false
+  validate = false,
+  apiKey,
+  apiSecret
 ) => {
   try {
     validateOrderInputs(type, volume, price, stopLoss);
@@ -27,7 +29,7 @@ exports.createOrder = async (
       validate,
     };
 
-    return krakenRequest(path, request);
+    return krakenRequest(path, request, apiKey, apiSecret);
   } catch (error) {
     throw error;
   }
@@ -37,7 +39,9 @@ exports.createTakeProfitOrder = async (
   type,
   volume,
   price,
-  validate = false
+  validate = false,
+  apiKey,
+  apiSecret
 ) => {
   try {
     validateOrderInputs(type, volume, price);
@@ -56,7 +60,7 @@ exports.createTakeProfitOrder = async (
       validate,
     };
 
-    return krakenRequest(path, request);
+    return krakenRequest(path, request, apiKey, apiSecret);
   } catch (error) {
     throw error;
   }
@@ -94,22 +98,25 @@ exports.trackPositionStatus = async (initialOrderId) => {
   }, 60000); // Check every minute
 };
 
-exports.removeOrderById = async (orderId) => {
+exports.removeOrderById = async (orderId, apiKey, privateKey) => {
   const path = "/0/private/CancelOrder";
+  try {
+    const request = {
+      txid: orderId,
+    };
 
-  const request = {
-    txid: orderId,
-  };
-
-  return krakenRequest(path, request);
+    return krakenRequest(path, request, apiKey, privateKey);
+  } catch (error) {
+    throw error;
+  }
 };
 
-exports.removeAllOrders = async () => {
+exports.removeAllOrders = async (apiKey, privateKey) => {
   const path = "/0/private/CancelAll";
-  return krakenRequest(path);
+  return krakenRequest(path, undefined, apiKey, privateKey);
 };
 
-exports.updateOrderById = async (orderId, price) => {
+exports.updateOrderById = async (orderId, price, apiKey, privateKey) => {
   try {
     validateOrderInputs(undefined, undefined, price);
 
@@ -121,7 +128,7 @@ exports.updateOrderById = async (orderId, price) => {
       price,
     };
 
-    return krakenRequest(path, request);
+    return krakenRequest(path, request, apiKey, privateKey);
   } catch (error) {
     throw error;
   }

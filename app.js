@@ -29,10 +29,13 @@ const {
   deleteUserApiKeys,
 } = require("./controllers/apiKeys.controller");
 const { handlePsqlErrors } = require("./errors/errorHandlers");
+const { testRoute } = require("./utils/verification");
+require("dotenv").config();
 
 const app = express();
 
 app.use(express.json());
+app.use(testRoute);
 
 // Kraken
 app.get("/get-balance", verifyAccessToken, getBalance);

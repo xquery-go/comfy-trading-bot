@@ -1,3 +1,4 @@
+const { selectUserApiKeys } = require("../models/apiKeys.model");
 const {
   retrieveBalance,
   retrieveOpenOrders,
@@ -5,8 +6,11 @@ const {
 } = require("../models/data.model");
 
 exports.getBalance = async (req, res) => {
+  const username = req.user.username;
+  const token = req.headers.authorization?.split(" ")[1];
   try {
-    const balanceData = await retrieveBalance();
+    const user = await selectUserApiKeys(username, token);
+    const balanceData = await retrieveBalance(user.apiKey, user.privateKey);
 
     res.status(200).send({ balanceData });
   } catch (error) {
@@ -18,8 +22,14 @@ exports.getBalance = async (req, res) => {
 };
 
 exports.getOpenOrders = async (req, res) => {
+  const username = req.user.username;
+  const token = req.headers.authorization?.split(" ")[1];
   try {
-    const openOrdersData = await retrieveOpenOrders();
+    const user = await selectUserApiKeys(username, token);
+    const openOrdersData = await retrieveOpenOrders(
+      user.apiKey,
+      user.privateKey
+    );
 
     res.status(200).send({ openOrdersData });
   } catch (error) {
@@ -31,8 +41,12 @@ exports.getOpenOrders = async (req, res) => {
 };
 
 exports.getPnl = async (req, res) => {
+  const username = req.user.username;
+  const token = req.headers.authorization?.split(" ")[1];
   try {
-    const unrealisedPnl = await retrievePnl();
+    const user = await selectUserApiKeys(username, token);
+    const unrealisedPnl = await retrievePnl(user.apiKey,
+      user.privateKey);
 
     res.status(200).send({ unrealisedPnl });
   } catch (error) {
