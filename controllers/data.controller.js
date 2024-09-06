@@ -14,7 +14,6 @@ exports.getBalance = async (req, res) => {
 
     res.status(200).send({ balanceData });
   } catch (error) {
-    console.error("Error retrieving balance:", error);
     res
       .status(500)
       .send({ error: "Internal Server Error", details: error.message });
@@ -33,7 +32,6 @@ exports.getOpenOrders = async (req, res) => {
 
     res.status(200).send({ openOrdersData });
   } catch (error) {
-    console.error("Error retrieving orders:", error);
     res
       .status(500)
       .send({ error: "Internal Server Error", details: error.message });
@@ -45,12 +43,10 @@ exports.getPnl = async (req, res) => {
   const token = req.headers.authorization?.split(" ")[1];
   try {
     const user = await selectUserApiKeys(username, token);
-    const unrealisedPnl = await retrievePnl(user.apiKey,
-      user.privateKey);
+    const unrealisedPnl = await retrievePnl(user.apiKey, user.privateKey);
 
     res.status(200).send({ unrealisedPnl });
   } catch (error) {
-    console.error("Error retrieving orders:", error);
     res
       .status(500)
       .send({ error: "Internal Server Error", details: error.message });

@@ -11,10 +11,11 @@ const {
   krakenRequest,
   validateOrderInputs,
 } = require("../utils/helperFunctions");
+const { apiKey } = require("../utils/keys");
 const { riskManageVolume } = require("../utils/riskManagement");
 
 jest.mock("../utils/helperFunctions", () => {
-  const originalModule = jest.requireActual('../utils/helperFunctions')
+  const originalModule = jest.requireActual("../utils/helperFunctions");
   return {
     ...originalModule,
     krakenRequest: jest.fn(() => {}),
@@ -37,6 +38,8 @@ describe("createOrder", () => {
       price: 50000,
       stopLoss: 49000,
       validate: false,
+      apiKey: "api_key",
+      privateKey: "private_key",
     };
 
     riskManageVolume.mockImplementationOnce(() => {
@@ -58,7 +61,12 @@ describe("createOrder", () => {
 
     await createOrder(...Object.values(input));
 
-    expect(krakenRequest).toHaveBeenCalledWith(expectedPath, expectedRequest);
+    expect(krakenRequest).toHaveBeenCalledWith(
+      expectedPath,
+      expectedRequest,
+      input.apiKey,
+      input.privateKey
+    );
   });
   it("should handle errors thrown by krakenRequest", async () => {
     const input = {
@@ -150,7 +158,15 @@ describe("createTakeProfit", () => {
     jest.clearAllMocks();
   });
   it("should call krakenRequest with the correct path and request", async () => {
-    const input = ["buy", 0.001, 50000, false];
+    // const input = ["buy", 0.001, 50000, false];
+    const input = {
+      type: "buy",
+      volume: 0.001,
+      price: 50000,
+      validate: false,
+      apiKey: "api_key",
+      privateKey: "private_key",
+    };
 
     const expectedPath = "/0/private/AddOrder";
 
@@ -166,9 +182,14 @@ describe("createTakeProfit", () => {
       validate: false,
     };
 
-    await createTakeProfitOrder(...input);
+    await createTakeProfitOrder(...Object.values(input));
 
-    expect(krakenRequest).toHaveBeenCalledWith(expectedPath, expectedRequest);
+    expect(krakenRequest).toHaveBeenCalledWith(
+      expectedPath,
+      expectedRequest,
+      input.apiKey,
+      input.privateKey
+    );
   });
   it("should handle errors thrown by krakenRequest", async () => {
     const input = ["buy", 0.001, 50000, false];
@@ -238,17 +259,27 @@ describe("removeOrderById", () => {
     jest.clearAllMocks();
   });
   it("should call krakenRequest with the correct path and request", async () => {
-    const input = "order123";
+    // const input = "order123";
+    const input = {
+      orderId: "order123",
+      apiKey: "api_key",
+      privateKey: "private_key",
+    };
 
     const expectedRequest = {
       txid: "order123",
     };
     const expectedPath = "/0/private/CancelOrder";
 
-    await removeOrderById(input);
+    await removeOrderById(...Object.values(input));
 
     expect(krakenRequest).toHaveBeenCalled();
-    expect(krakenRequest).toHaveBeenCalledWith(expectedPath, expectedRequest);
+    expect(krakenRequest).toHaveBeenCalledWith(
+      expectedPath,
+      expectedRequest,
+      input.apiKey,
+      input.privateKey
+    );
   });
   it("should return removed order data when successful", async () => {
     const input = "order123";
@@ -277,11 +308,21 @@ describe("removeOrderById", () => {
 
 describe("removeAllOrders", () => {
   it("should call krakenRequest with the correct path", async () => {
+    const input = {
+      apiKey: "api_key",
+      privateKey: "private_key",
+    };
+
     const expectedPath = "/0/private/CancelAll";
 
-    await removeAllOrders();
+    await removeAllOrders(...Object.values(input));
 
-    expect(krakenRequest).toHaveBeenCalledWith(expectedPath);
+    expect(krakenRequest).toHaveBeenCalledWith(
+      expectedPath,
+      undefined,
+      input.apiKey,
+      input.privateKey
+    );
   });
   it("should handle errors thrown by krakenRequest", async () => {
     const errorMessage = "Something went wrong";
@@ -301,7 +342,12 @@ describe("updateOrderById", () => {
     jest.clearAllMocks();
   });
   it("should call krakenRequest with the correct path and request", async () => {
-    const input = ["123", 50000];
+    const input = {
+      orderId: "123",
+      price: 50000,
+      apiKey: "api_key",
+      privateKey: "private_key",
+    };
 
     const expectedPath = "/0/private/EditOrder";
 
@@ -311,10 +357,15 @@ describe("updateOrderById", () => {
       price: 50000,
     };
 
-    await updateOrderById(...input);
+    await updateOrderById(...Object.values(input));
 
     expect(krakenRequest).toHaveBeenCalled();
-    expect(krakenRequest).toHaveBeenCalledWith(expectedPath, expectedRequest);
+    expect(krakenRequest).toHaveBeenCalledWith(
+      expectedPath,
+      expectedRequest,
+      input.apiKey,
+      input.privateKey
+    );
   });
   it("should handle errors thrown by krakenRequest", async () => {
     const input = ["123", 50000];

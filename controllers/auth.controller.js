@@ -105,8 +105,6 @@ exports.userSignOut = async (req, res) => {
     const confirmationMessage = await signOutUser(token);
     res.status(200).send({ confirmationMessage });
   } catch (error) {
-    console.log('hello');
-    
     res.status(error.status).send({ message: error.msg });
   }
 };

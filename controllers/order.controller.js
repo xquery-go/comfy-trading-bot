@@ -32,7 +32,6 @@ exports.placeOrder = async (req, res) => {
 
     res.status(201).send({ results });
   } catch (error) {
-    console.error("Error placing order:", error);
     res
       .status(500)
       .send({ error: "Internal Server Error", details: error.message });
@@ -54,7 +53,6 @@ exports.cancelOrderById = async (req, res) => {
 
     res.status(200).send({ removalData });
   } catch (error) {
-    console.error("Error removing order:", error);
     res
       .status(500)
       .send({ error: "Internal Server Error", details: error.message });
@@ -72,7 +70,6 @@ exports.cancelAllOrders = async (req, res) => {
 
     res.status(200).send({ removalData });
   } catch (error) {
-    console.error("Error removing orders:", error);
     res
       .status(500)
       .send({ error: "Internal Server Error", details: error.message });
@@ -90,7 +87,6 @@ exports.editOrder = async (req, res) => {
 
     res.status(200).send({ updatedOrderData });
   } catch (error) {
-    console.error("Error editing order:", error);
     res
       .status(500)
       .send({ error: "Internal Server Error", details: error.message });
