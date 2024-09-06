@@ -98,7 +98,7 @@ afterAll(async () => {
   await db.end();
 });
 
-describe.only("getAllApiKeys", () => {
+describe("getAllApiKeys", () => {
   it("should when successful return an array of objects containing user api keys", async () => {
     const expected = [
       {

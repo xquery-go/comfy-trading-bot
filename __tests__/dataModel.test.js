@@ -14,9 +14,15 @@ describe("retrieveBalance", () => {
   it("should call krakenRequest with the correct path", async () => {
     const expectedPath = "/0/private/Balance";
 
-    await retrieveBalance();
+    const input = ["api_key", "private_key"];
+
+    await retrieveBalance(...input);
     expect(krakenRequest).toHaveBeenCalled();
-    expect(krakenRequest).toHaveBeenCalledWith(expectedPath);
+    expect(krakenRequest).toHaveBeenCalledWith(
+      expectedPath,
+      undefined,
+      ...input
+    );
   });
   it("should handle errors thrown by krakenRequest", async () => {
     const errorMessage = "Something went wrong";
@@ -45,10 +51,16 @@ describe("retrieveOpenOrders", () => {
   it("should call krakenRequest with the correct path", async () => {
     const expectedPath = "/0/private/OpenOrders";
 
-    await retrieveOpenOrders();
+    const input = ["api_key", "private_key"];
+
+    await retrieveOpenOrders(...input);
 
     expect(krakenRequest).toHaveBeenCalled();
-    expect(krakenRequest).toHaveBeenCalledWith(expectedPath);
+    expect(krakenRequest).toHaveBeenCalledWith(
+      expectedPath,
+      undefined,
+      ...input
+    );
   });
   it("should handle errors thrown by krakenRequest", async () => {
     const errorMessage = "Something went wrong";
@@ -79,14 +91,20 @@ describe("retrievePnl", () => {
   it("should call krakenRequest with the correct path", async () => {
     const expectedPath = "/0/private/TradeBalance";
 
+    const input = ["api_key", "private_key"];
+
     const mockTradeBalanceData = { v: 100.0 };
 
-    krakenRequest.mockResolvedValueOnce(mockTradeBalanceData)
+    krakenRequest.mockResolvedValueOnce(mockTradeBalanceData);
 
-    await retrievePnl();
+    await retrievePnl(...input);
 
     expect(krakenRequest).toHaveBeenCalled();
-    expect(krakenRequest).toHaveBeenCalledWith(expectedPath);
+    expect(krakenRequest).toHaveBeenCalledWith(
+      expectedPath,
+      undefined,
+      ...input
+    );
   });
   it("should handle errors thrown by krakenRequest", async () => {
     const errorMessage = "Something went wrong";
@@ -97,13 +115,13 @@ describe("retrievePnl", () => {
 
     await expect(retrievePnl()).rejects.toThrow(errorMessage);
   });
-  it('should return a floating point valuation of the current open positions', async () => {
+  it("should return a floating point valuation of the current open positions", async () => {
     const mockTradeBalanceData = { v: 100.0 };
 
-    krakenRequest.mockResolvedValueOnce(mockTradeBalanceData)
+    krakenRequest.mockResolvedValueOnce(mockTradeBalanceData);
 
     const actual = await retrievePnl();
-    expect(typeof actual).toBe("number")
-    expect(actual).toEqual(mockTradeBalanceData.v)
+    expect(typeof actual).toBe("number");
+    expect(actual).toEqual(mockTradeBalanceData.v);
   });
 });
