@@ -142,29 +142,29 @@ describe("POST /create-order", () => {
         );
       });
   });
-  it("should call the trackPositionStatus function, with the txid of the placed order", async () => {
-    const mockOrderDetails = {
-      ticker: "BTCUSDT",
-      action: "buy",
-      price: 64513.9,
-      quantity: 0.1956,
-      takeProfit: 64616.1,
-      stopLoss: 64462.8,
-    };
+  // it("should call the trackPositionStatus function, with the txid of the placed order", async () => {
+  //   const mockOrderDetails = {
+  //     ticker: "BTCUSDT",
+  //     action: "buy",
+  //     price: 64513.9,
+  //     quantity: 0.1956,
+  //     takeProfit: 64616.1,
+  //     stopLoss: 64462.8,
+  //   };
 
-    const mockOrderData = { txid: ["order123"] };
+  //   const mockOrderData = { txid: ["order123"] };
 
-    createOrder.mockResolvedValue(mockOrderData);
+  //   createOrder.mockResolvedValue(mockOrderData);
 
-    return request(app)
-      .post("/create-order")
-      .expect(201)
-      .send(mockOrderDetails)
-      .then(({ body }) => {
-        expect(trackPositionStatus).toHaveBeenCalled();
-        expect(trackPositionStatus).toHaveBeenCalledWith(mockOrderData.txid[0]);
-      });
-  });
+  //   return request(app)
+  //     .post("/create-order")
+  //     .expect(201)
+  //     .send(mockOrderDetails)
+  //     .then(({ body }) => {
+  //       expect(trackPositionStatus).toHaveBeenCalled();
+  //       expect(trackPositionStatus).toHaveBeenCalledWith(mockOrderData.txid[0]);
+  //     });
+  // });
 });
 
 describe("GET /get-balance", () => {

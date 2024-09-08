@@ -18,9 +18,9 @@ exports.riskManageVolume = async (
 
   const stopDistance = entry - stopLoss;
   const stopAverage = (entry + stopLoss) / 2;
-  const stopPercentage = roundToTwoDecimals(stopDistance / stopAverage);
+  const stopPercentage = stopDistance / stopAverage
 
   const volume = Math.abs(riskAmount / stopPercentage / entry);
-
+  
   return volume;
 };

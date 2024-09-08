@@ -66,7 +66,7 @@ describe("riskManageVolume", () => {
       return mockBalanceData;
     });
     const actual = await riskManageVolume(...input);
-    expect(actual).toBe(0.0069);
+    expect(actual).toBe(0.0061065);
   });
   it("should account for if the position direction is short", async () => {
     const input = [29000, 30000, 0.05, "USDT"];
@@ -86,7 +86,7 @@ describe("riskManageVolume", () => {
       return mockBalanceData;
     });
     const actual = await riskManageVolume(...input);
-    expect(actual).toBe(0.007137931034482759);
+    expect(actual).toBe(0.006317068965517241);
   });
 });
 

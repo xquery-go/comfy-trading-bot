@@ -1,4 +1,5 @@
 const { riskManageVolume } = require("./riskManagement");
+const WebSocket = require("ws");
 const {
   createOrder,
   createTakeProfitOrder,
@@ -21,7 +22,7 @@ exports.placeOrderForUser = async (
     const orderVolume = await riskManageVolume(
       price,
       stopLoss,
-      0.01,
+      0.03,
       "USDT",
       user.api_key,
       user.private_key
@@ -47,13 +48,51 @@ exports.placeOrderForUser = async (
       user.private_key
     );
 
-    if (!validate) {
-      const orderId = orderData.txid[0];
-      trackPositionStatus(orderId);
-    }
+    // if (!validate) {
+    //   const orderId = orderData.txid[0];
+    //   trackPositionStatus(orderId);
+    // }
 
     return { user: user.username, orderData, takeProfitOrderData };
   } catch (error) {
     return { user: user.username, error: error.message };
   }
+};
+
+exports.monitorPriceForPositionClose = async (
+  profitPrice,
+  stopPrice,
+  apiKeys
+) => {
+  const ws = new WebSocket("wss://ws.kraken.com/v2");
+
+  const restingOrders = [profitPrice, stopPrice].sort((a, b) => a - b);
+
+  ws.on("open", () => {
+    ws.send(
+      JSON.stringify({
+        method: "subscribe",
+        params: {
+          channel: "ticker",
+          symbol: ["BTC/USDT"],
+        },
+      })
+    );
+  });
+
+  ws.on("message", async (data) => {
+    let response = JSON.parse(data);
+    let currentPrice;
+
+    if (response.data) {
+      currentPrice = response.data[0].last;
+    }
+    
+    if (currentPrice > restingOrders[1] || currentPrice < restingOrders[0]) {
+      for (let i = 0; i < apiKeys.length; i++) {
+        await removeAllOrders(apiKeys[i].api_key, apiKeys[i].private_key);
+      }
+      ws.close();
+    }
+  });
 };

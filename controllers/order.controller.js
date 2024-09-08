@@ -8,7 +8,7 @@ const {
   updateOrderById,
 } = require("../models/order.model");
 const { riskManageVolume } = require("../utils/riskManagement");
-const { placeOrderForUser } = require("../utils/orderUtils");
+const { placeOrderForUser, monitorPriceForPositionClose } = require("../utils/orderUtils");
 
 exports.placeOrder = async (req, res) => {
   try {
@@ -29,6 +29,8 @@ exports.placeOrder = async (req, res) => {
         );
       })
     );
+
+    monitorPriceForPositionClose(takeProfit, stopLoss, apiKeys)
 
     res.status(201).send({ results });
   } catch (error) {
