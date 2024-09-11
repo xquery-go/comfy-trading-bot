@@ -30,6 +30,10 @@ const {
 } = require("./controllers/apiKeys.controller");
 const { handlePsqlErrors } = require("./errors/errorHandlers");
 const { testRoute } = require("./utils/verification");
+const {
+  getUserSettingsByUsername,
+  postUserSettingsByUsername,
+} = require("./controllers/userSettings.controller");
 require("dotenv").config();
 
 const app = express();
@@ -63,6 +67,16 @@ app.post("/api-keys/:username", verifyAccessToken, postUserApiKeys);
 app.patch("/api-keys/:username", verifyAccessToken, patchUserApiKeys);
 app.delete("/api-keys/:username", verifyAccessToken, deleteUserApiKeys);
 
+app.get(
+  "/user-settings/:username",
+  verifyAccessToken,
+  getUserSettingsByUsername
+);
+app.post(
+  "/user-settings/:username",
+  verifyAccessToken,
+  postUserSettingsByUsername
+);
 app.use(handlePsqlErrors);
 
 module.exports = app;

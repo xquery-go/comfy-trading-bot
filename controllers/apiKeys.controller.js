@@ -4,7 +4,6 @@ const {
   updateApiKeysByUser,
   removeUserApiKeys,
 } = require("../models/apiKeys.model");
-const { verifyUsernameByToken } = require("../utils/verification");
 
 exports.getUserApiKeys = async (req, res) => {
   const { username } = req.params;
@@ -14,6 +13,9 @@ exports.getUserApiKeys = async (req, res) => {
     const apiKeysData = await selectUserApiKeys(username, token);
     res.status(200).send({ apiKeysData });
   } catch (error) {
+    if (!error.status) {
+      next(error);
+    }
     res.status(error.status).send({ message: error.message });
   }
 };
