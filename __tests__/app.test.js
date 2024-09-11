@@ -1,6 +1,7 @@
 const request = require("supertest");
 const app = require("../app");
-const testData = require("../db/test-data/apiKeys");
+const testApiData = require("../db/test-data/apiKeys");
+const testUserSettingsData = require("../db/test-data/userSettings");
 const db = require("../db/connection");
 const jwt = require("jsonwebtoken");
 const {
@@ -31,7 +32,7 @@ const {
 const { seed } = require("../db/seeds/seed");
 
 beforeEach(async () => {
-  await seed(testData);
+  await seed(testApiData, testUserSettingsData);
 });
 
 afterAll(async () => {
@@ -1350,6 +1351,202 @@ describe("DELETE /api-keys/:username", () => {
       .expect(404)
       .then(({ body }) => {
         expect(body.message).toBe(mockErrorMessage);
+      });
+  });
+});
+
+describe.only("GET /user-settings/:username", () => {
+  it("should when successful respond with a 200 status code", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+
+    return request(app)
+      .get("/user-settings/john_doe")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200);
+  });
+  it("should when successful respond with an apiKeysData object", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+
+    return request(app)
+      .get("/user-settings/john_doe")
+      .expect(200)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .then(({ body }) => {
+        expect(body.userSettings).toMatchObject({
+          username: "john_doe",
+          strategy: expect.any(String),
+          bot_on: expect.any(Boolean),
+        });
+      });
+  });
+  it("should respond with a 401 status code and unauthorized when token username and params dont match", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "james_bond",
+      },
+      "secret"
+    );
+    const mockErrorMessage = "Unauthorized access.";
+
+    return request(app)
+      .get("/user-settings/john_doe")
+      .expect(401)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .then(({ body }) => {
+        expect(body.message).toBe(mockErrorMessage);
+      });
+  });
+  it("should respond with status code 404 and Not found if the user does not exist in database", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "james_bond",
+      },
+      "secret"
+    );
+    const mockErrorMessage = "Not found.";
+
+    return request(app)
+      .get("/user-settings/james_bond")
+      .expect(404)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .then(({ body }) => {
+        expect(body.message).toBe(mockErrorMessage);
+      });
+  });
+});
+
+describe.only("POST /user-settings/:username", () => {
+  it("should when successful respond with a 201 status code, and an object of the newly added entry", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "test_user",
+      },
+      "secret"
+    );
+
+    const queryValues = ["test_user", "test@test.com", "apiKey", "privateKey"];
+    await db.query(
+      `
+        INSERT INTO api_keys 
+        (username, email, api_key, private_key) 
+        VALUES ($1, $2, $3, $4) 
+        `,
+      queryValues
+    );
+
+    const input = {
+      strategy: "MACD",
+      bot_on: true,
+    };
+
+    return request(app)
+      .post("/user-settings/test_user")
+      .expect(201)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send(input)
+      .then(({ body }) => {
+        expect(body.userSettings).toEqual({
+          username: "test_user",
+          strategy: "MACD",
+          bot_on: true,
+        });
+      });
+  });
+  it('"should respond with a 401 status code and unauthorized when token username and params dont match"', async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "james_bond",
+      },
+      "secret"
+    );
+
+    const queryValues = ["test_user", "test@test.com", "apiKey", "privateKey"];
+    await db.query(
+      `
+        INSERT INTO api_keys 
+        (username, email, api_key, private_key) 
+        VALUES ($1, $2, $3, $4) 
+        `,
+      queryValues
+    );
+
+    const input = {
+      strategy: "MACD",
+      bot_on: true,
+    };
+
+    const mockErrorMessage = "Unauthorized access.";
+
+    return request(app)
+      .post("/user-settings/test_user")
+      .expect(401)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send(input)
+      .then(({ body }) => {
+        expect(body.message).toBe(mockErrorMessage);
+      });
+  });
+  it("should respond with 400 and Bad Request of the user already exists", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+
+    const input = {
+      strategy: "MACD",
+      bot_on: false,
+    };
+
+    return request(app)
+      .post("/user-settings/john_doe")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(400)
+      .send(input)
+      .then(({ body }) => {
+        expect(body.message).toBe("Bad Request: Already Exists");
+      });
+  });
+  it("should respond with a 400 status code and Bad Request if missing required field", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "test_user",
+      },
+      "secret"
+    );
+
+    const queryValues = ["test_user", "test@test.com", "apiKey", "privateKey"];
+    await db.query(
+      `
+        INSERT INTO api_keys 
+        (username, email, api_key, private_key) 
+        VALUES ($1, $2, $3, $4) 
+        `,
+      queryValues
+    );
+
+    const input = {
+      bot_on: true,
+    };
+
+    return request(app)
+      .post("/user-settings/test_user")
+      .expect(400)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send(input)
+      .then(({ body }) => {
+        expect(body.message).toBe("Bad Request: Missing Required Field");
       });
   });
 });

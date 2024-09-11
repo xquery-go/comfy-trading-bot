@@ -2,7 +2,8 @@ const { riskManageVolume } = require("../utils/riskManagement");
 const { retrieveBalance } = require("../models/data.model");
 const { getAllApiKeys } = require("../models/apiKeys.model");
 const { seed } = require("../db/seeds/seed");
-const testData = require("../db/test-data/apiKeys");
+const testApiData = require("../db/test-data/apiKeys");
+const testUserSettingsData = require("../db/test-data/userSettings");
 const db = require("../db/connection");
 
 jest.mock("../models/data.model");
@@ -91,7 +92,7 @@ describe("riskManageVolume", () => {
 });
 
 beforeEach(async () => {
-  await seed(testData);
+  await seed(testApiData, testUserSettingsData);
 });
 
 afterAll(async () => {
