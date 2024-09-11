@@ -1276,7 +1276,7 @@ describe("PATCH /api-keys/:username", () => {
         expect(body.message).toBe(mockErrorMessage);
       });
   });
-  it("should respond with 400 and Missing required field, when not given either api key ir private key", async () => {
+  it("should respond with 400 and Missing required field, when not given either api key or private key", async () => {
     const accessToken = jwt.sign(
       {
         username: "john_doe",
@@ -1355,7 +1355,7 @@ describe("DELETE /api-keys/:username", () => {
   });
 });
 
-describe.only("GET /user-settings/:username", () => {
+describe("GET /user-settings/:username", () => {
   it("should when successful respond with a 200 status code", async () => {
     const accessToken = jwt.sign(
       {
@@ -1425,7 +1425,7 @@ describe.only("GET /user-settings/:username", () => {
   });
 });
 
-describe.only("POST /user-settings/:username", () => {
+describe("POST /user-settings/:username", () => {
   it("should when successful respond with a 201 status code, and an object of the newly added entry", async () => {
     const accessToken = jwt.sign(
       {
@@ -1547,6 +1547,76 @@ describe.only("POST /user-settings/:username", () => {
       .send(input)
       .then(({ body }) => {
         expect(body.message).toBe("Bad Request: Missing Required Field");
+      });
+  });
+});
+
+describe("PATCH /user-settings/:username", () => {
+  it("should when successful respond with a 200 status code, and an object containing the updated entry", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+
+    const input = {
+      bot_on: false,
+    };
+
+    return request(app)
+      .patch("/user-settings/john_doe")
+      .expect(200)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send(input)
+      .then(({ body }) => {
+        expect(body.userSettings).toEqual({
+          username: "john_doe",
+          strategy: "MACD",
+          bot_on: false,
+        });
+      });
+  });
+  it("should respond with a 401 status code and Unauthorized Access if token and params username dont match", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "james_bond",
+      },
+      "secret"
+    );
+
+    const input = {
+      bot_on: false,
+    };
+
+    return request(app)
+      .patch("/user-settings/john_doe")
+      .expect(401)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send(input)
+      .then(({ body }) => {
+        expect(body.message).toBe("Unauthorized access.");
+      });
+  });
+  it("should respond 400 Bad Request when passed an invalid data type", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+
+    const input = {
+      bot_on: 123,
+    };
+
+    return request(app)
+      .patch("/user-settings/john_doe")
+      .expect(400)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send(input)
+      .then(({ body }) => {
+        expect(body.message).toBe("Bad Request: Invalid Input");
       });
   });
 });
