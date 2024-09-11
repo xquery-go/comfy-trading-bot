@@ -33,6 +33,7 @@ const { testRoute } = require("./utils/verification");
 const {
   getUserSettingsByUsername,
   postUserSettingsByUsername,
+  patchUserSettingsByUsername,
 } = require("./controllers/userSettings.controller");
 require("dotenv").config();
 
@@ -76,6 +77,11 @@ app.post(
   "/user-settings/:username",
   verifyAccessToken,
   postUserSettingsByUsername
+);
+app.patch(
+  "/user-settings/:username",
+  verifyAccessToken,
+  patchUserSettingsByUsername
 );
 app.use(handlePsqlErrors);
 
