@@ -99,8 +99,26 @@ exports.getAllApiKeys = async () => {
       SELECT username, api_key, private_key FROM api_keys
       `
     );
-    return response.rows
+    return response.rows;
   } catch (error) {
-    throw error
+    throw error;
+  }
+};
+
+exports.getApiKeysByStrategy = async (strategy) => {
+  try {
+    const response = await db.query(
+      `
+      SELECT api_keys.username, api_keys.api_key, api_keys.private_key FROM api_keys
+      JOIN user_settings
+      ON api_keys.username = user_settings.username
+      WHERE user_settings.strategy = $1
+      AND user_settings.bot_on = true
+      `,
+      [strategy]
+    );
+    return response.rows;
+  } catch (error) {
+    throw error;
   }
 };

@@ -1,4 +1,4 @@
-const { getAllApiKeys, selectUserApiKeys } = require("../models/apiKeys.model");
+const { getAllApiKeys, selectUserApiKeys, getApiKeysByStrategy } = require("../models/apiKeys.model");
 const {
   createOrder,
   createTakeProfitOrder,
@@ -12,9 +12,9 @@ const { placeOrderForUser, monitorPriceForPositionClose } = require("../utils/or
 
 exports.placeOrder = async (req, res) => {
   try {
-    const { action, ticker, price, stopLoss, takeProfit, validate } = req.body;
+    const { action, ticker, price, stopLoss, takeProfit, validate, strategy } = req.body;
 
-    const apiKeys = await getAllApiKeys();
+    const apiKeys = await getApiKeysByStrategy(strategy);
 
     const results = await Promise.all(
       apiKeys.map(async (user) => {
