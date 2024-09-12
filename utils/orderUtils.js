@@ -48,11 +48,6 @@ exports.placeOrderForUser = async (
       user.private_key
     );
 
-    // if (!validate) {
-    //   const orderId = orderData.txid[0];
-    //   trackPositionStatus(orderId);
-    // }
-
     return { user: user.username, orderData, takeProfitOrderData };
   } catch (error) {
     return { user: user.username, error: error.message };
