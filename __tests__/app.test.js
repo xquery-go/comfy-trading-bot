@@ -1620,3 +1620,56 @@ describe("PATCH /user-settings/:username", () => {
       });
   });
 });
+
+describe('DELETE /user-settings/:username', () => {
+  it('should when successful respond with 204 No Content, and remove the database entry', async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+
+    return request(app)
+      .delete("/user-settings/john_doe")
+      .expect(204)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .then(async ({ body }) => {
+        const response = await db.query(`SELECT * FROM user_settings WHERE username = 'john_doe'`)
+
+        expect(response.rows.length).toBe(0)
+      });
+  });
+  it('should respond 404 Not Found if the entry doesnt exist', async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "james_bond",
+      },
+      "secret"
+    );
+
+    return request(app)
+      .delete("/user-settings/james_bond")
+      .expect(404)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .then(({ body }) => {
+        expect(body.message).toBe('User does not exist.')
+      });
+  });
+  it("should respond with a 401 status code and Unauthorized Access if token and params username dont match", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "james_bond",
+      },
+      "secret"
+    );
+
+    return request(app)
+      .delete("/user-settings/john_doe")
+      .expect(401)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .then(({ body }) => {
+        expect(body.message).toBe("Unauthorized access.");
+      });
+  });
+})
