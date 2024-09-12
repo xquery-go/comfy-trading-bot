@@ -16,6 +16,7 @@ const {
   retrieveBalance,
   retrieveOpenOrders,
   retrievePnl,
+  retrieveTradesHistory,
 } = require("../models/data.model");
 const { riskManageVolume } = require("../utils/riskManagement");
 const {
@@ -52,6 +53,7 @@ jest.mock("../models/data.model", () => ({
   retrieveBalance: jest.fn(),
   retrieveOpenOrders: jest.fn(),
   retrievePnl: jest.fn(),
+  retrieveTradesHistory: jest.fn(),
 }));
 
 jest.mock("../utils/helperFunctions");
@@ -209,6 +211,56 @@ describe("GET /get-balance", () => {
 
     return request(app)
       .get("/get-balance")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(500)
+      .then(({ body }) => {
+        expect(body.error).toBe("Internal Server Error");
+        expect(body.details).toBe(errorMessage);
+      });
+  });
+});
+
+describe("GET /trades-history", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("should respond with 200 status code, and a balance data object", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+
+    const mockTradesHistory = { txid: '123' };
+
+    retrieveTradesHistory.mockResolvedValue(mockTradesHistory);
+
+    return request(app)
+      .get("/get-trades-history")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200)
+      .then(({ body }) => {
+        expect(retrieveTradesHistory).toHaveBeenCalled();
+        expect(body.tradesHistory).toEqual(mockTradesHistory);
+      });
+  });
+  it("should handle errors thrown by retrieveBalance", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+
+    const errorMessage = "Something went wrong";
+
+    retrieveTradesHistory.mockImplementationOnce(() => {
+      return Promise.reject(new Error(errorMessage));
+    });
+
+    return request(app)
+      .get("/get-trades-history")
       .set("Authorization", `Bearer ${accessToken}`)
       .expect(500)
       .then(({ body }) => {
@@ -1621,8 +1673,8 @@ describe("PATCH /user-settings/:username", () => {
   });
 });
 
-describe('DELETE /user-settings/:username', () => {
-  it('should when successful respond with 204 No Content, and remove the database entry', async () => {
+describe("DELETE /user-settings/:username", () => {
+  it("should when successful respond with 204 No Content, and remove the database entry", async () => {
     const accessToken = jwt.sign(
       {
         username: "john_doe",
@@ -1635,12 +1687,14 @@ describe('DELETE /user-settings/:username', () => {
       .expect(204)
       .set("Authorization", `Bearer ${accessToken}`)
       .then(async ({ body }) => {
-        const response = await db.query(`SELECT * FROM user_settings WHERE username = 'john_doe'`)
+        const response = await db.query(
+          `SELECT * FROM user_settings WHERE username = 'john_doe'`
+        );
 
-        expect(response.rows.length).toBe(0)
+        expect(response.rows.length).toBe(0);
       });
   });
-  it('should respond 404 Not Found if the entry doesnt exist', async () => {
+  it("should respond 404 Not Found if the entry doesnt exist", async () => {
     const accessToken = jwt.sign(
       {
         username: "james_bond",
@@ -1653,7 +1707,7 @@ describe('DELETE /user-settings/:username', () => {
       .expect(404)
       .set("Authorization", `Bearer ${accessToken}`)
       .then(({ body }) => {
-        expect(body.message).toBe('User does not exist.')
+        expect(body.message).toBe("User does not exist.");
       });
   });
   it("should respond with a 401 status code and Unauthorized Access if token and params username dont match", async () => {
@@ -1672,4 +1726,4 @@ describe('DELETE /user-settings/:username', () => {
         expect(body.message).toBe("Unauthorized access.");
       });
   });
-})
+});

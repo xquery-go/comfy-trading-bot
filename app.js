@@ -9,6 +9,7 @@ const {
   getBalance,
   getOpenOrders,
   getPnl,
+  getTradesHistory,
 } = require("./controllers/data.controller");
 const {
   userSignUp,
@@ -47,6 +48,7 @@ app.use(testRoute);
 app.get("/get-balance", verifyAccessToken, getBalance);
 app.get("/get-open-orders", verifyAccessToken, getOpenOrders);
 app.get("/get-pnl", verifyAccessToken, getPnl);
+app.get("/get-trades-history", verifyAccessToken, getTradesHistory);
 app.post("/create-order", placeOrder);
 app.patch("/edit-order", verifyAccessToken, editOrder);
 app.patch("/cancel-order", verifyAccessToken, cancelOrderById);
