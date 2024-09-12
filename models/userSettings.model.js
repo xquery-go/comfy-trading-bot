@@ -46,7 +46,7 @@ exports.createUserSettings = async (username, strategy, bot_on, token) => {
 
 exports.updateUserSettings = async (username, strategy, bot_on, token) => {
   try {
-    verifyUsernameByToken(username, token)
+    verifyUsernameByToken(username, token);
     const queryValues = [username];
 
     let sqlQuery = "UPDATE user_settings SET";
@@ -73,7 +73,24 @@ exports.updateUserSettings = async (username, strategy, bot_on, token) => {
 
     const response = await db.query(sqlQuery, queryValues);
 
-    return response.rows[0]
+    return response.rows[0];
+  } catch (error) {
+    throw error;
+  }
+};
+
+exports.removeUserSettings = async (username, token) => {
+  try {
+    verifyUsernameByToken(username, token);
+    
+    const response = await db.query(
+      `DELETE FROM user_settings WHERE username = $1`,
+      [username]
+    );
+
+    if (response.rowCount === 0) {
+      throw { status: 404, message: "User does not exist." };
+    }
   } catch (error) {
     throw error;
   }

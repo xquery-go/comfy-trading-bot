@@ -34,6 +34,7 @@ const {
   getUserSettingsByUsername,
   postUserSettingsByUsername,
   patchUserSettingsByUsername,
+  deleteUserSettingsByUsername,
 } = require("./controllers/userSettings.controller");
 require("dotenv").config();
 
@@ -83,6 +84,12 @@ app.patch(
   verifyAccessToken,
   patchUserSettingsByUsername
 );
+app.delete(
+  "/user-settings/:username",
+  verifyAccessToken,
+  deleteUserSettingsByUsername
+);
+
 app.use(handlePsqlErrors);
 
 module.exports = app;
