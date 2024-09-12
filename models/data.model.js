@@ -26,3 +26,20 @@ exports.retrievePnl = async (apiKey, apiSecret) => {
     throw error;
   }
 };
+
+exports.retrieveTradesHistory = async (apiKey, apiSecret) => {
+  try {
+    const path = "/0/private/TradesHistory";
+
+    const tradesHistory = await krakenRequest(
+      path,
+      undefined,
+      apiKey,
+      apiSecret
+    );
+
+    return tradesHistory
+  } catch (error) {
+    throw error
+  }
+};

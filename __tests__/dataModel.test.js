@@ -2,6 +2,7 @@ const {
   retrieveBalance,
   retrieveOpenOrders,
   retrievePnl,
+  retrieveTradesHistory,
 } = require("../models/data.model");
 const { krakenRequest } = require("../utils/helperFunctions");
 
@@ -123,5 +124,45 @@ describe("retrievePnl", () => {
     const actual = await retrievePnl();
     expect(typeof actual).toBe("number");
     expect(actual).toEqual(mockTradeBalanceData.v);
+  });
+});
+
+describe("retrieveTradesHistory", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("should call krakenRequest with the correct path", async () => {
+    const expectedPath = "/0/private/TradesHistory";
+
+    const input = ["api_key", "private_key"];
+
+    await retrieveTradesHistory(...input);
+
+    expect(krakenRequest).toHaveBeenCalled();
+    expect(krakenRequest).toHaveBeenCalledWith(
+      expectedPath,
+      undefined,
+      ...input
+    );
+  });
+  it("should handle errors thrown by krakenRequest", async () => {
+    const errorMessage = "Something went wrong";
+
+    krakenRequest.mockImplementationOnce(() => {
+      return Promise.reject(new Error(errorMessage));
+    });
+
+    await expect(retrieveTradesHistory()).rejects.toThrow(errorMessage);
+  });
+  it("should return the output of krakenRequest", async () => {
+    const mockTradesHistory = { txid: "123" };
+
+    krakenRequest.mockImplementationOnce(() => {
+      return mockTradesHistory;
+    });
+
+    const openOrdersData = await retrieveTradesHistory();
+
+    expect(openOrdersData).toEqual(mockTradesHistory);
   });
 });
