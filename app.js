@@ -21,6 +21,7 @@ const {
   userForgotPassword,
   userConfirmForgotPassword,
   userSignOut,
+  userAccessVerification,
 } = require("./controllers/auth.controller");
 const { verifyAccessToken } = require("./utils/cognito");
 const {
@@ -38,9 +39,11 @@ const {
   deleteUserSettingsByUsername,
 } = require("./controllers/userSettings.controller");
 require("dotenv").config();
+const cors = require("cors");
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 app.use(testRoute);
 
@@ -64,6 +67,7 @@ app.post("/forgot-password", userForgotPassword);
 app.post("/confirm-forgot-password", userConfirmForgotPassword);
 app.patch("/change-password", verifyAccessToken, changeUserPasswordByToken);
 app.delete("/delete-user", verifyAccessToken, deleteUserByToken);
+app.post("/api/auth/verify-access", verifyAccessToken, userAccessVerification);
 
 // Database
 app.get("/api-keys/:username", verifyAccessToken, getUserApiKeys);

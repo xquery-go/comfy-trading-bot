@@ -108,3 +108,11 @@ exports.userSignOut = async (req, res) => {
     res.status(error.status).send({ message: error.msg });
   }
 };
+
+exports.userAccessVerification = async (req, res) => {
+  try {
+    res.status(200).send(req.user);
+  } catch (error) {
+    throw error
+  }
+};

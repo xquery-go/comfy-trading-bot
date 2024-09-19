@@ -31,6 +31,7 @@ const {
   signOutUser,
 } = require("../models/auth.model");
 const { seed } = require("../db/seeds/seed");
+const { verifyAccessToken } = require("../utils/cognito");
 
 beforeEach(async () => {
   await seed(testApiData, testUserSettingsData);
@@ -73,6 +74,7 @@ describe("POST /create-order", () => {
       takeProfit: 64616.1,
       stopLoss: 64462.8,
       validate: false,
+      strategy: "MACD",
     };
 
     const mockOrderData = { txid: ["order123"] };
@@ -114,6 +116,7 @@ describe("POST /create-order", () => {
       takeProfit: 64616.1,
       stopLoss: 64462.8,
       validate: false,
+      strategy: "MACD",
     };
 
     const mockTakeProftOrderData = { txid: ["order123"] };
@@ -232,7 +235,7 @@ describe("GET /trades-history", () => {
       "secret"
     );
 
-    const mockTradesHistory = { txid: '123' };
+    const mockTradesHistory = { txid: "123" };
 
     retrieveTradesHistory.mockResolvedValue(mockTradesHistory);
 
@@ -1107,6 +1110,21 @@ describe("POST /sign-out", () => {
       });
   });
 });
+
+// describe.only("POST /api/auth/verify-access", () => {
+//   beforeEach(() => {
+//     jest.mock("../utils/cognito", () => {
+//       verifyAccessToken: jest.fn()
+//     });
+//   });
+//   it("should when successful respond with a 200 status code", async () => {
+//     const mockUser = { userId: "john" };
+//     verifyAccessToken.mockImplementationOnce(async (req, res, next) => {
+//       console.log('success?')
+//     });
+//     return request(app).post("/api/auth/verify-access").expect(200);
+//   });
+// });
 
 describe("GET /api-keys/:username", () => {
   it("should when successful respond with a 200 status code", async () => {
