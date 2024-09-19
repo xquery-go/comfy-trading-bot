@@ -41,6 +41,7 @@ exports.verifyAccessToken = async (req, res, next) => {
   if (process.env.NODE_ENV === "test") {
     return next();
   }
+
   const token = req.headers.authorization?.split(" ")[1];
 
   if (!token) {
