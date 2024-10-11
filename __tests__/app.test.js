@@ -17,6 +17,7 @@ const {
   retrieveOpenOrders,
   retrievePnl,
   retrieveTradesHistory,
+  retrieveLedgerInfo,
 } = require("../models/data.model");
 const { riskManageVolume } = require("../utils/riskManagement");
 const {
@@ -55,6 +56,7 @@ jest.mock("../models/data.model", () => ({
   retrieveOpenOrders: jest.fn(),
   retrievePnl: jest.fn(),
   retrieveTradesHistory: jest.fn(),
+  retrieveLedgerInfo: jest.fn(),
 }));
 
 jest.mock("../utils/helperFunctions");
@@ -214,6 +216,56 @@ describe("GET /get-balance", () => {
 
     return request(app)
       .get("/get-balance")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(500)
+      .then(({ body }) => {
+        expect(body.error).toBe("Internal Server Error");
+        expect(body.details).toBe(errorMessage);
+      });
+  });
+});
+
+describe("GET /api/kraken/ledger-info", () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+  it("should respond with 200 status code, and a ledger info object", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+
+    const mockLedgerData = { BTC: 1 };
+
+    retrieveLedgerInfo.mockResolvedValue(mockLedgerData);
+
+    return request(app)
+      .get("/api/kraken/ledger-info")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200)
+      .then(({ body }) => {
+        expect(retrieveLedgerInfo).toHaveBeenCalled();
+        expect(body.ledgerInfo).toEqual(mockLedgerData);
+      });
+  });
+  it("should handle errors thrown by retrieveBalance", async () => {
+    const accessToken = jwt.sign(
+      {
+        username: "john_doe",
+      },
+      "secret"
+    );
+
+    const errorMessage = "Something went wrong";
+
+    retrieveLedgerInfo.mockImplementationOnce(() => {
+      return Promise.reject(new Error(errorMessage));
+    });
+
+    return request(app)
+      .get("/api/kraken/ledger-info")
       .set("Authorization", `Bearer ${accessToken}`)
       .expect(500)
       .then(({ body }) => {

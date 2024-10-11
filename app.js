@@ -10,6 +10,7 @@ const {
   getOpenOrders,
   getPnl,
   getTradesHistory,
+  getLedgerInfo,
 } = require("./controllers/data.controller");
 const {
   userSignUp,
@@ -49,6 +50,7 @@ app.use(testRoute);
 
 // Kraken
 app.get("/get-balance", verifyAccessToken, getBalance);
+app.get("/api/kraken/ledger-info", verifyAccessToken, getLedgerInfo);
 app.get("/get-open-orders", verifyAccessToken, getOpenOrders);
 app.get("/get-pnl", verifyAccessToken, getPnl);
 app.get("/get-trades-history", verifyAccessToken, getTradesHistory);

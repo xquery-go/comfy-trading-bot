@@ -3,6 +3,7 @@ const {
   retrieveOpenOrders,
   retrievePnl,
   retrieveTradesHistory,
+  retrieveLedgerInfo,
 } = require("../models/data.model");
 const { krakenRequest } = require("../utils/helperFunctions");
 
@@ -42,6 +43,43 @@ describe("retrieveBalance", () => {
     const balance = await retrieveBalance();
 
     expect(balance).toEqual(mockBalance);
+  });
+});
+
+describe("retrieveLedgerInfo", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("should call krakenRequest with the correct path", async () => {
+    const expectedPath = "/0/private/Ledgers";
+
+    const input = ["api_key", "private_key"];
+
+    await retrieveLedgerInfo(...input);
+    expect(krakenRequest).toHaveBeenCalled();
+    expect(krakenRequest).toHaveBeenCalledWith(
+      expectedPath,
+      undefined,
+      ...input
+    );
+  });
+  it("should handle errors thrown by krakenRequest", async () => {
+    const errorMessage = "Something went wrong";
+
+    krakenRequest.mockImplementationOnce(() =>
+      Promise.reject(new Error(errorMessage))
+    );
+
+    await expect(retrieveBalance()).rejects.toThrow(errorMessage);
+  });
+  it("should return the output of krakenRequest", async () => {
+    const mockLedger = { BTC: 1 };
+
+    krakenRequest.mockImplementationOnce(() => mockLedger);
+
+    const ledgerInfo = await retrieveLedgerInfo();
+
+    expect(ledgerInfo).toEqual(mockLedger);
   });
 });
 
