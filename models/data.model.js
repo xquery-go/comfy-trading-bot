@@ -5,6 +5,11 @@ exports.retrieveBalance = (apiKey, apiSecret) => {
   return krakenRequest(path, undefined, apiKey, apiSecret);
 };
 
+exports.retrieveLedgerInfo = (apiKey, apiSecret) => {
+  const path = "/0/private/Ledgers";
+  return krakenRequest(path, undefined, apiKey, apiSecret);
+};
+
 exports.retrieveOpenOrders = (apiKey, apiSecret) => {
   const path = "/0/private/OpenOrders";
   return krakenRequest(path, undefined, apiKey, apiSecret);
@@ -38,8 +43,8 @@ exports.retrieveTradesHistory = async (apiKey, apiSecret) => {
       apiSecret
     );
 
-    return tradesHistory
+    return tradesHistory;
   } catch (error) {
-    throw error
+    throw error;
   }
 };

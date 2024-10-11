@@ -220,8 +220,8 @@ exports.signOut = async (token) => {
     const response = await cognitoClient.send(command);
     return response;
   } catch (error) {
-    console.log(error, '<<<<');
-    
+    console.log(error, "<<<<");
+
     throw error;
   }
 };
